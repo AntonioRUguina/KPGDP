@@ -1,0 +1,4 @@
+#Instance   Seed	Time
+GKD-b_43_n150_b02_m15.txt;3;1000
+GKD-b_43_n150_b02_m15.txt;4;1000
+GKD-b_43_n150_b02_m15.txt;5;1000

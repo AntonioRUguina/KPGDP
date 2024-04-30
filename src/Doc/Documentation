@@ -1,0 +1,27 @@
+# Input data
+
+Para en input se tendrá que seleccionar la instancia a ejecutar (**Instance**), la semilla que se va a correr (**Seed**),
+el tiempo que va a tener (**Time**), el conjunto de betas que se selecciona (**Betas**), el algoritmo que se quiere ejecutar (**Algorithm**),
+la función que tendrá el parámetro epsilon-greedy (**Epsilon**) y la probabilidad sobre el fit (**Probability**).
+
+# Betas
+Actualmente existen los siguientes conjuntos de betas:
+    - Medium: Betas con un dinamismo intermedio.
+
+# Algorithm
+Actualmente existen los siguientes algoritmos a ejecutar:
+    - DYNAMIC:
+    - DYNAMIC_WITH_PROBABILITY:
+    - DYNAMIC_WITH_PROBABILITY_WITH_DYNAMIC_START:
+    - BIAS_DETERMINISTIC:
+
+# Epsilon
+Actualmente existen lAs siguientes funciones para el parámetro beta:
+    - LINEAR:
+    - None
+
+# Probability
+    - ALWAYS_1:
+    - EXPONENTIAL:
+    - LINEAR:
+    - None
