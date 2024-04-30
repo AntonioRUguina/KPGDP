@@ -30,87 +30,21 @@ class Solution_Gurobi:
         """
     def run_algorithm(self):
 
-        self.construct_solution_kgpdp(k=2)
+        self.construct_solution_kgpdp(k=1, p =10)
+        self.construct_solution_kgpdp_compact(k=1, p= 10)
         #self.construct_solution_pdp()
 
         #print(self.selected_list, self.of)
 
         return self.of
 
-    def update_of(self, v_min1, v_min2, of):
-        self.of = of
-        self.v_min1 = v_min1
-        self.v_min2 = v_min2
-
-    def add(self, v, k):
-        self.selected_dict[k].append(v)
-        self.selected_list.append(v)
-        self.n_selected[k] += 1
-
-    def is_feasible(self):
-
-        feasible = True
-        for key, value in self.selected_dict.items():
-            feasible = feasible and len(value) >= 20
-
-        return feasible
-
-    def construct_solution_pdp(self):
-        # pdp
-        instance = self.instance
-        n = instance.n
-        p = 20
-
-        model = pyo.ConcreteModel()
-
-        model.i = RangeSet(0, n - 1)
-
-        model.X = pyo.Var(model.i, within= Binary)
-
-        model.d = pyo.Var(bounds=(0, None))
-
-        # model.x = pyo.Var(range(n^2), within=Binary, bounds=(0, None))
-
-        X = model.X
-        d = model.d
-        M = np.max(self.distance)
-
-        x_sum = sum([X[i] for i in range(n)])
-        model.C1 = pyo.Constraint(expr=x_sum == p)
-        model.C2 = pyo.ConstraintList()
-        for i in range(n):
-            for j in range(n):
-                if i < j:
-                    model.C2.add(expr=M * X[i] + M * X[j] + d <= 2 * M + self.distance[i, j])
-
-        model.obj = pyo.Objective(expr=d, sense=maximize)
-
-        opt = SolverFactory('glpk')
-        # opt = SolverFactory('gurobi_direct')
-        opt.options['tmlim'] = 100
-        results = opt.solve(model)
-
-        print(results)
-
-        X_value = [pyo.value(X[i]) for i in range(n)]
-        d_value = pyo.value(d)
-        solution = []
-        for i in range(0, n):
-            if pyo.value(X[i]) > 0:
-                solution.append(i)
-
-        print(solution)
-
-        print('X:', X_value)
-        print('d:', d_value)
 
         # return sol
-    def construct_solution_kgpdp(self, k):
+    def construct_solution_kgpdp(self, k, p):
 
         #pdp
         instance = self.instance
         n = instance.n
-        p= 20
 
         model = pyo.ConcreteModel()
 
@@ -150,9 +84,9 @@ class Solution_Gurobi:
 
         model.obj = pyo.Objective(expr=d, sense=maximize)
 
-        opt = SolverFactory('cbc')
+        opt = SolverFactory('glpk')
         #opt = SolverFactory('gurobi_direct')
-        opt.options['tmlim'] = 10
+        opt.options['tmlim'] = 100
         results = opt.solve(model)
 
         print(results)
@@ -173,20 +107,15 @@ class Solution_Gurobi:
 
         #return sol
 
-    def construct_solution_kgpdp_compact(self,k):
+    def construct_solution_kgpdp_compact(self, k, p):
         #pdp
         instance = self.instance
         n = instance.n
-        p = 20
-
         model = pyo.ConcreteModel()
 
         Dm = np.max(self.distance)
-        print(Dm)
         sorted_distances = list(dict.fromkeys([i.distance for i in self.sorted_distances]))
         sorted_distances.reverse()
-        print(sorted_distances)
-        print(len(sorted_distances))
         model.i = RangeSet(0, n)
         model.k = RangeSet(0, k)
         model.M = RangeSet(0, len(sorted_distances))
@@ -250,3 +179,54 @@ class Solution_Gurobi:
 
 
         #return sol
+
+"""
+    def construct_solution_pdp(self):
+        # pdp
+        instance = self.instance
+        n = instance.n
+        p = 20
+
+        model = pyo.ConcreteModel()
+
+        model.i = RangeSet(0, n - 1)
+
+        model.X = pyo.Var(model.i, within= Binary)
+
+        model.d = pyo.Var(bounds=(0, None))
+
+        # model.x = pyo.Var(range(n^2), within=Binary, bounds=(0, None))
+
+        X = model.X
+        d = model.d
+        M = np.max(self.distance)
+
+        x_sum = sum([X[i] for i in range(n)])
+        model.C1 = pyo.Constraint(expr=x_sum == p)
+        model.C2 = pyo.ConstraintList()
+        for i in range(n):
+            for j in range(n):
+                if i < j:
+                    model.C2.add(expr=M * X[i] + M * X[j] + d <= 2 * M + self.distance[i, j])
+
+        model.obj = pyo.Objective(expr=d, sense=maximize)
+
+        opt = SolverFactory('glpk')
+        # opt = SolverFactory('gurobi_direct')
+        opt.options['tmlim'] = 100
+        results = opt.solve(model)
+
+        print(results)
+
+        X_value = [pyo.value(X[i]) for i in range(n)]
+        d_value = pyo.value(d)
+        solution = []
+        for i in range(0, n):
+            if pyo.value(X[i]) > 0:
+                solution.append(i)
+
+        print(solution)
+
+        print('X:', X_value)
+        print('d:', d_value)
+"""
