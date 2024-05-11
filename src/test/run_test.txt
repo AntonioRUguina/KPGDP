@@ -1,2 +1,2 @@
 #Instance   Seed	Time
-AA_BORRAR_TEST.txt;3;1000
+MDG-b_02_n500_10_20.txt;110;1000

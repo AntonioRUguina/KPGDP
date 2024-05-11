@@ -12,7 +12,7 @@ def read_test(name):
     Note: Use # to comment lines in the file
     """
 
-    file_name = build_full_path("kpGDP\\src\\test\\" + name)
+    file_name = build_full_path("KPGDP\\src\\test\\" + name)
     tests = []
     with open(file_name, 'r') as tests_file:
         for line_test in tests_file:
@@ -28,14 +28,14 @@ def build_full_path(relative_path):
     current_path = os.getcwd()
 
     # Encuentra la posición de "kpGDP" en la ruta actual
-    index = current_path.find("kpGDP")
+    index = current_path.find("kpGDPAlgorithm")
 
     # Si no encontramos la raíz del proyecto, lanzar un error
     if index == -1:
-        raise ValueError("The root" + "kpGDP" + "is not found in the current path.")
+        raise ValueError("The root" + "kpGDPAlgorithm" + "is not found in the current path.")
 
     # Construir la ruta completa hasta "kpGDP"
-    base_path = current_path[:index + len("kpGDP")]
+    base_path = current_path[:index + len("kpGDPAlgorithm")]
 
     # Retorna la ruta completa
     return os.path.join(base_path, relative_path)

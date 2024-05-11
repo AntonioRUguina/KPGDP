@@ -7,7 +7,8 @@ class Instance:
     def __init__(self, path):
         self.name = ""  # nombre de la instancia
         self.n = 0  # nodos
-        self.b = 0  # capacidad mínima requerida
+        self.p = 0
+        self.k = 0
         self.capacity = []  # vector de capacidades
         self.distance = None  # matriz de distancia
         self.sorted_distances = []  # lista ordenada de Edge
@@ -24,16 +25,14 @@ class Instance:
                     self.n = int(line)
                     self.distance = np.zeros((self.n, self.n))
                 elif i == 2:
-                    self.b = int(line)
+                    self.k = int(line)
                 elif i == 3:
-                    a = 1
-                    #line_read = line.rstrip('\t\n ')
-                    #self.capacity = [float(x) for x in line_read.split('\t')]
+                    self.p = int(line)
                 else:
                     line_read = line.rstrip('\t\n ')
                     d = [float(x) for x in line_read.split('\t')]
                     for z in range(0, self.n):
-                        if d[z] != 0:
+                        #if d[z] != 0:
                             self.distance[fila, z] = d[z]
                             self.sorted_distances.append(Edge(fila, z, d[z]))
                     fila += 1

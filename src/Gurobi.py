@@ -9,15 +9,16 @@ class Solution_Gurobi:
         self.sorted_distances = self.instance.sorted_distances
         self.distance = self.instance.distance
         self.selected_list = []
-        self.selected_dict = {i: [] for i in range(0, param_dict["groups"])}
-        self.n_selected = param_dict["groups"]*[0]
+        self.selected_dict = {i: [] for i in range(0, self.instance.k)}
+        self.n_selected = self.instance.k*[0]
         self.v_min1 = -1
         self.v_min2 = -1
         self.of = self.sorted_distances[0].distance * 10
         self.capacity = 0
         self.time = []
-        self.groups = param_dict["groups"]
+        self.groups = self.instance.k
         self.patron = []
+        self.p = self.instance.p
 
 
         """"
@@ -29,9 +30,8 @@ class Solution_Gurobi:
         random.seed(t.seed+count)
         """
     def run_algorithm(self):
-
-        self.construct_solution_kgpdp(k=1, p =10)
-        self.construct_solution_kgpdp_compact(k=1, p= 10)
+        #self.construct_solution_kgpdp(k=2, p =20, time_max = 30)
+        self.construct_solution_kgpdp_compact(k=self.groups, p= self.p, time_max = 180)
         #self.construct_solution_pdp()
 
         #print(self.selected_list, self.of)
@@ -40,7 +40,7 @@ class Solution_Gurobi:
 
 
         # return sol
-    def construct_solution_kgpdp(self, k, p):
+    def construct_solution_kgpdp(self, k, p,time_max):
 
         #pdp
         instance = self.instance
@@ -84,9 +84,10 @@ class Solution_Gurobi:
 
         model.obj = pyo.Objective(expr=d, sense=maximize)
 
-        opt = SolverFactory('glpk')
+        opt = SolverFactory('cbc')
         #opt = SolverFactory('gurobi_direct')
-        opt.options['tmlim'] = 100
+        #opt.options['tmlim'] = 10
+        opt.options['seconds'] = time_max
         results = opt.solve(model)
 
         print(results)
@@ -107,7 +108,7 @@ class Solution_Gurobi:
 
         #return sol
 
-    def construct_solution_kgpdp_compact(self, k, p):
+    def construct_solution_kgpdp_compact(self, k, p, time_max):
         #pdp
         instance = self.instance
         n = instance.n
@@ -158,9 +159,10 @@ class Solution_Gurobi:
             telescopic_sum += u[m] * (sorted_distances[m+1] - sorted_distances[m])
         model.obj = pyo.Objective(expr=Dm - telescopic_sum , sense=maximize)
 
-        opt = SolverFactory('glpk')
+        opt = SolverFactory('cbc')
         #opt = SolverFactory('gurobi_direct')
-        opt.options['tmlim'] = 100
+        #opt.options['tmlim'] = 10
+        opt.options['seconds'] = time_max
         results = opt.solve(model)
 
         print(results)

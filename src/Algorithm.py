@@ -5,26 +5,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 from copy import deepcopy
 class Solution:
-    def __init__(self, param_dict, p):
+    def __init__(self, param_dict):
         self.instance = param_dict["inst"]
         self.delta = param_dict["delta"]
-        self.sorted_distances = self.instance.sorted_distances
+        self.sorted_distances = self.instance.sorted_distances.copy()
         self.distance = self.instance.distance
         self.selected_list = []
-        self.selected_dict = {k: [] for k in range(0, param_dict["groups"])}
-        self.n_selected = param_dict["groups"]*[0]
+        self.selected_dict = {k: [] for k in range(0, self.instance.k)}
+        self.n_selected = self.instance.k*[0]
         self.v_min1 = -1
         self.v_min2 = -1
         self.of = self.sorted_distances[0].distance * 10
-        self.dict_disp_group = {k: [] for k in range(0, param_dict["groups"])}
+        self.dict_disp_group = {k: [] for k in range(0, self.instance.k)}
         self.capacity = 0
         self.time = []
-        self.groups = param_dict["groups"]
+        self.groups = self.instance.k
         self.patron = []
         self.n_ls =0
         self.historial = []
         self.improved_ls_group = False
-        self.p = p
+        self.p = self.instance.p
 
 
         """"
@@ -38,7 +38,7 @@ class Solution:
 
     def run_algorithm(self, beta_0, beta_1):
         self.construct_solution(beta_0, beta_1)
-        max_ls = 10
+        max_ls = 100
         self.historial.append(self.of)
         #print(self.selected_list, self.of)
         # ls between groups
@@ -52,61 +52,17 @@ class Solution:
             self.n_ls += 1
 
         if self.groups > 1:
-            k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
-            self.LS_change_group(k1=k)
+            for i in range(max_ls):
+                k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
+                self.LS_change_group(k1=k)
+                self.historial.append(self.of)
+
+                if not improved:
+                    break
 
 
 
         return self.of
-
-    def find_first_common_element_index(self, list1, list2):
-        for index, element in enumerate(list1):
-            if element in list2:
-                return index
-        return None
-
-    def find_first_common_element_groups(self, list1, list2):
-        for index, element in enumerate(list1):
-            if element[0] in list2[element[1]]:
-                return index
-        return None
-
-
-    def analizar_patron(self, list_groups):
-
-        for k in range(0, self.groups):
-            list = list_groups[k]
-            i = 0
-            stop = True
-            while stop:
-                index_selected = i
-                edge = self.sorted_distances[index_selected]
-                if (edge.v1 in list and edge.v2 in list and
-                        (edge.v1 not in self.selected_list and edge.v2 not in self.selected_list)):
-                    self.add(edge.v1, k)
-                    self.add(edge.v2, k)
-                    self.update_of(edge.v1, edge.v2, edge.distance, k)
-                    stop = False
-                    self.patron.append(index_selected)
-                i += 1
-
-        cl = self.create_cl()
-
-        real_alpha = 0
-        while len(self.selected_list) < self.p*2:
-            v_values = [[c.v, c.group] for c in cl]
-            index_sol = self.find_first_common_element_groups(v_values, list_groups)
-            self.patron.append(index_sol)
-            c = cl.pop(index_sol)
-            self.add(c.v, c.group)
-            self.update_cl(cl, c)
-            self.update_of(c.v, c.closest_v, c.cost, c.group)
-        plt.plot(self.patron, marker='o')
-        plt.show()
-        print(self.of)
-
-        # return sol
-
 
     def update_of(self, v_min1, v_min2, of, group, recalculate= False):
         if recalculate:
@@ -263,11 +219,10 @@ class Solution:
         return improved
 
     def LS_change_group(self, k1):
-
+        min_nodes_k1 = self.dict_disp_group[k1][0]
+        nodes_list_k1 = [i for i in min_nodes_k1]
         for k2 in range(self.groups):
             if k1 != k2:
-                min_nodes_k1 = self.dict_disp_group[k1][0]
-                nodes_list_k1 = [i for i in min_nodes_k1]
                 for node_k1 in nodes_list_k1:
                     for node_k2 in self.selected_dict[k2]:
                         k1_min_node, k1_value = self.distance_to(node_k1, k2, exclude_list=[node_k2])
@@ -281,3 +236,53 @@ class Solution:
                             self.update_of(k2_min_node, node_k2, k2_value, k1, recalculate=True)
                             self.improved_ls_group = True
                             return True
+
+
+    def find_first_common_element_index(self, list1, list2):
+        for index, element in enumerate(list1):
+            if element in list2:
+                return index
+        return None
+
+    def find_first_common_element_groups(self, list1, list2):
+        for index, element in enumerate(list1):
+            if element[0] in list2[element[1]]:
+                return index
+        return None
+
+
+    def analizar_patron(self, list_groups):
+
+        for k in range(0, self.groups):
+            list = list_groups[k]
+            i = 0
+            stop = True
+            while stop:
+                index_selected = i
+                edge = self.sorted_distances[index_selected]
+                if (edge.v1 in list and edge.v2 in list and
+                        (edge.v1 not in self.selected_list and edge.v2 not in self.selected_list)):
+                    self.add(edge.v1, k)
+                    self.add(edge.v2, k)
+                    self.update_of(edge.v1, edge.v2, edge.distance, k)
+                    stop = False
+                    self.patron.append(index_selected)
+                i += 1
+
+        cl = self.create_cl()
+
+        real_alpha = 0
+        while len(self.selected_list) < self.p*2:
+            v_values = [[c.v, c.group] for c in cl]
+            index_sol = self.find_first_common_element_groups(v_values, list_groups)
+            self.patron.append(index_sol)
+            c = cl.pop(index_sol)
+            self.add(c.v, c.group)
+            self.update_cl(cl, c)
+            self.update_of(c.v, c.closest_v, c.cost, c.group)
+        plt.plot(self.patron, marker='o')
+        plt.show()
+        print(self.of)
+
+        # return sol
+
