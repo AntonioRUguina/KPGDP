@@ -131,15 +131,6 @@ class Solution:
             #distance_limit = cl[0].cost - (real_alpha * cl[len(cl) - 1].cost)
             index_selected = int((np.log(np.random.random()) / np.log(1 - beta_1))) % len(cl)
 
-            """
-            if len(self.selected_list) < 10:
-                index_selected = int((np.log(np.random.random()) / np.log(1 - 0.6))) % len(cl)
-            elif len(self.selected_list) < 30:
-                index_selected = int((np.log(np.random.random()) / np.log(1 - 0.2))) % len(cl)
-            else:
-                index_selected = int((np.log(np.random.random()) / np.log(1 - 0.8))) % len(cl)
-            """
-
             c = cl.pop(index_selected)
             self.add(c.v, c.group)
 

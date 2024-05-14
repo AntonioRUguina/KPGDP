@@ -29,9 +29,9 @@ class Solution_Gurobi:
         # Dynamic enviroment
         random.seed(t.seed+count)
         """
-    def run_algorithm(self):
-        #self.construct_solution_kgpdp(k=2, p =20, time_max = 30)
-        self.construct_solution_kgpdp_compact(k=self.groups, p= self.p, time_max = 180)
+    def r0ñun_algorithm(self):
+        self.construct_solution_kgpdp(k=self.groups, p= self.p, time_max = 600)
+        #self.construct_solution_kgpdp_compact(k=self.groups, p= self.p, time_max = 600)
         #self.construct_solution_pdp()
 
         #print(self.selected_list, self.of)
