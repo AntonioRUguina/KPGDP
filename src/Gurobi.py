@@ -5,6 +5,7 @@ from pyomo.opt import SolverFactory
 class Solution_Gurobi:
     def __init__(self, param_dict):
         self.instance = param_dict["inst"]
+        self.instance_name = param_dict['t'].instName
         self.delta = param_dict["delta"]
         self.sorted_distances = self.instance.sorted_distances
         self.distance = self.instance.distance
@@ -29,15 +30,34 @@ class Solution_Gurobi:
         # Dynamic enviroment
         random.seed(t.seed+count)
         """
-    def r0ñun_algorithm(self):
-        self.construct_solution_kgpdp(k=self.groups, p= self.p, time_max = 600)
-        #self.construct_solution_kgpdp_compact(k=self.groups, p= self.p, time_max = 600)
+    def run_algorithm(self):
+        #self.construct_solution_kgpdp(k=self.groups, p= self.p, time_max = 3600)
+        self.construct_solution_kgpdp_compact(k=self.groups, p= self.p, time_max = 3600)
         #self.construct_solution_pdp()
 
         #print(self.selected_list, self.of)
 
         return self.of
 
+    def extract_time_from_string(self,text):
+        try:
+            # Split the text by lines
+            lines = text.split('\n')
+            # Iterate over each line
+            for line in lines:
+                # Check if the line starts with "Time:"
+                if line.startswith("  Time:"):
+                    # Split the line by ":" and get the second part
+                    time_value = line.split(":")[1].strip()
+                    return time_value
+            print("Value after 'Time:' not found in the input string")
+            return None
+        except Exception as e:
+            print("An error occurred:", str(e))
+            return None
+    def save_dict_to_txt(self,filename, d_value, instance_name,model, time):
+        with open(filename, 'a') as file:
+                file.write(f"{instance_name} {model} {time}: {d_value}\n")
 
         # return sol
     def construct_solution_kgpdp(self, k, p,time_max):
@@ -75,25 +95,31 @@ class Solution_Gurobi:
             model.C2.add(expr=x_sum <= 1)
 
         model.C3 = pyo.ConstraintList()
-        for i in range(n):
-            for j in range(n):
-                if i < j:
-                    for ki in range(k):
-                        model.C3.add(expr= M*X[i, ki] + M*X[j, ki] + d <= 2*M + self.distance[i, j] )
+        for i in range(n-1):
+            for j in range(i+1,n):
+                for ki in range(k):
+                    model.C3.add(expr= M*X[i, ki] + M*X[j, ki] + d <= 2*M + self.distance[i, j] )
 
 
         model.obj = pyo.Objective(expr=d, sense=maximize)
 
-        opt = SolverFactory('cbc')
+        opt = SolverFactory('gurobi')
         #opt = SolverFactory('gurobi_direct')
         #opt.options['tmlim'] = 10
-        opt.options['seconds'] = time_max
+        opt.options['TimeLimit'] = time_max
         results = opt.solve(model)
-
-        print(results)
-
         d_value = pyo.value(d)
+
+
+        # Función para guardar el diccionario en un archivo de texto
+
+        time_value = self.extract_time_from_string(str(results["Solver"]))
+        # Guardar el diccionario en 'data.txt'
+        self.save_dict_to_txt('output.txt', d_value, self.instance_name,"kuby", time_value)
+
+
         print('d:', d_value)
+        """"
         #X_value = [pyo.value(X[i]) for i in range(n)]
         solution_dict = {k: [] for k in range(0, k)}
         for k in range(0, k):
@@ -104,7 +130,7 @@ class Solution_Gurobi:
         print (solution_dict)
 
         #print('X:', X_value)
-
+        """
 
         #return sol
 
@@ -143,12 +169,11 @@ class Solution_Gurobi:
             model.C2.add(expr=x_sum <= 1)
 
         model.C3 = pyo.ConstraintList()
-        for i in range(n):
-            for j in range(n):
-                if i < j:
-                    index = sorted_distances.index(self.distance[i, j])
-                    for ki in range(k):
-                        model.C3.add(expr=  X[i, ki] + X[j, ki] <= 1 + u[index])
+        for i in range(n-1):
+            for j in range(i+1,n):
+                index = sorted_distances.index(self.distance[i, j])
+                for ki in range(k):
+                    model.C3.add(expr=  X[i, ki] + X[j, ki] <= 1 + u[index])
 
         model.C4 = pyo.ConstraintList()
         for m in range(1, len(sorted_distances)):
@@ -159,13 +184,15 @@ class Solution_Gurobi:
             telescopic_sum += u[m] * (sorted_distances[m+1] - sorted_distances[m])
         model.obj = pyo.Objective(expr=Dm - telescopic_sum , sense=maximize)
 
-        opt = SolverFactory('cbc')
-        #opt = SolverFactory('gurobi_direct')
-        #opt.options['tmlim'] = 10
-        opt.options['seconds'] = time_max
+        opt = SolverFactory('gurobi')
+        # opt = SolverFactory('gurobi_direct')
+        # opt.options['tmlim'] = 10
+        opt.options['TimeLimit'] = time_max
+        opt.options['NodeFileStart'] = 0.2
+        opt.options['Threads'] = 2
         results = opt.solve(model)
 
-        print(results)
+
 
         #X_value = [pyo.value(X[i]) for i in range(n)]
         #print([pyo.value(u[i]) for i in range(len(sorted_distances))])
@@ -173,9 +200,12 @@ class Solution_Gurobi:
         for m in range(0, len(sorted_distances)):
             if pyo.value(u[m]) > 0:
                 solution.append(sorted_distances[m])
+                print(solution)
+                time_value = self.extract_time_from_string(str(results["Solver"]))
+                # Guardar el diccionario en 'data.txt'
+                self.save_dict_to_txt('output.txt', sorted_distances[m], self.instance_name, "sayah", time_value)
                 break
-
-        print(solution)
+        #print(solution)
 
         #print('X:', X_value)
 

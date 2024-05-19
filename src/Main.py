@@ -26,6 +26,7 @@ if __name__ == "__main__":
     tests = read_test("run_test.txt")
 
     for t in tests:
+        print(t.instName)
         params_dict = prepare_instance(t)
         #sol = Solution(params_dict, p)
         #sol.analizar_patron([5, 6, 12, 16, 18, 21, 22, 24, 25, 26, 27, 28, 33, 36, 37, 40, 42, 44, 45, 49] )
@@ -36,7 +37,7 @@ if __name__ == "__main__":
         beta_0 = 0.5
         beta_1 = 0.5
         start = time.time()
-        while time.time() - start < 90:
+        while time.time() - start < 20:
             it += 1
             sol = Solution(params_dict)
             beta_0_it = np.random.triangular(0, beta_0, 1, 1)[0]
@@ -47,9 +48,20 @@ if __name__ == "__main__":
                 final_sol = sol
                 beta_0 = beta_0_it
                 beta_1 = beta_1_it
-                print(it,final_sol.historial, final_sol.improved_ls_group, final_sol.n_ls, beta_0, beta_1, of_it,)
+                print(it,final_sol.historial, final_sol.improved_ls_group, beta_0, beta_1, of_it,)
         print("Iterations: ", it)
         print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
               final_sol.selected_dict)
         #write_data_dinamic(sol, t, "output.txt")
     #sys.exit()
+
+#GKD-b_11_n50_2_20.txt;110;1000
+#GKD-b_20_n50_2_30.txt;110;1000
+#GKD-b_41_n150_2_20.txt;110;1000
+#GKD-b_41_n150_5_30.txt;110;1000
+#GKD-b_50_n150_2_20.txt;110;1000
+#GKD-b_50_n150_5_30.txt;110;1000
+#GKD-c_01_n500_2_20.txt;110;1000
+#GKD-c_01_n500_10_30.txt;110;1000
+#MDG-b_01_n500_2_20.txt;110;1000
+

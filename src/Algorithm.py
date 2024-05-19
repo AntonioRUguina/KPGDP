@@ -3,6 +3,7 @@ import random
 from Utils.objects import (Candidate)
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 from copy import deepcopy
 class Solution:
     def __init__(self, param_dict):
@@ -21,10 +22,10 @@ class Solution:
         self.time = []
         self.groups = self.instance.k
         self.patron = []
-        self.n_ls =0
         self.historial = []
         self.improved_ls_group = False
         self.p = self.instance.p
+
 
 
         """"
@@ -37,19 +38,22 @@ class Solution:
         """
 
     def run_algorithm(self, beta_0, beta_1):
+
+
         self.construct_solution(beta_0, beta_1)
+
         max_ls = 100
         self.historial.append(self.of)
         #print(self.selected_list, self.of)
-        # ls between groups
 
+        self.run_VNS(max_ls)
+        """
         for i in range(max_ls):
             k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
             improved = self.LS_change_node(k)
             self.historial.append(self.of)
             if not improved:
                 break
-            self.n_ls += 1
 
         if self.groups > 1:
             for i in range(max_ls):
@@ -59,8 +63,15 @@ class Solution:
 
                 if not improved:
                     break
+        if self.groups > 2:
+            for i in range(max_ls):
+                k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
+                self.LS_change_group_3_exchange(k1=k)
+                self.historial.append(self.of)
 
-
+                if not improved:
+                    break
+        """
 
         return self.of
 
@@ -111,6 +122,7 @@ class Solution:
         Constructive heuristic (Deterministic Version)
         :return:
         """
+
         for k in range(0, self.groups):
             stop = True
             while stop:
@@ -127,16 +139,21 @@ class Solution:
 
         # 0 dado que es el greedy
         real_alpha = 0
+        total_time = 0
         while not self.is_feasible():
             #distance_limit = cl[0].cost - (real_alpha * cl[len(cl) - 1].cost)
             index_selected = int((np.log(np.random.random()) / np.log(1 - beta_1))) % len(cl)
 
             c = cl.pop(index_selected)
             self.add(c.v, c.group)
-
             self.update_of(c.v, c.closest_v, c.cost, c.group)
 
+            start = time.time()
+
             self.update_cl(cl, c)
+            end = time.time()
+            total_time += end - start
+        print(total_time)
 
         #return sol
 
@@ -157,19 +174,16 @@ class Solution:
 
     def update_cl(self, cl, last_added):
             instance = self.instance
-            to_remove = []
+            to_remove = set()
             for c in cl:
-                if c.v in self.selected_list:
-                    to_remove.append(c)
-                elif self.n_selected[c.group] == self.p:
-                    to_remove.append(c)
+                if c.v in self.selected_list or self.n_selected[c.group] == self.p:
+                    to_remove.add(c)
                 elif c.group == last_added.group:
                     d_to_last = instance.distance[last_added.v][c.v]
                     if d_to_last < c.cost:
                         c.cost = d_to_last
                         c.closest_v = last_added.v
-            for c in to_remove:
-                cl.remove(c)
+            cl[:] = [c for c in cl if c not in to_remove]
             cl.sort(key=lambda x: x.cost, reverse=True)  # ordena distancia de mayor a menos
 
     def distance_to(self, v, k, exclude_list= [] ):
@@ -217,16 +231,91 @@ class Solution:
                 for node_k1 in nodes_list_k1:
                     for node_k2 in self.selected_dict[k2]:
                         k1_min_node, k1_value = self.distance_to(node_k1, k2, exclude_list=[node_k2])
-                        k2_min_node, k2_value = self.distance_to(node_k2, k1, exclude_list=[node_k1])
-                        if k1_value > self.of and k2_value > self.of:
-                            self.selected_dict[k1].remove(node_k1)
-                            self.selected_dict[k2].remove(node_k2)
-                            self.add(node_k1, k2)
-                            self.update_of(k1_min_node, node_k1, k1_value, k2, recalculate=True)
-                            self.add(node_k2, k1)
-                            self.update_of(k2_min_node, node_k2, k2_value, k1, recalculate=True)
-                            self.improved_ls_group = True
-                            return True
+                        if k1_value > self.of:
+                            k2_min_node, k2_value = self.distance_to(node_k2, k1, exclude_list=[node_k1])
+                            if k2_value > self.of:
+                                self.selected_dict[k1].remove(node_k1)
+                                self.selected_dict[k2].remove(node_k2)
+                                self.add(node_k1, k2)
+                                self.update_of(k1_min_node, node_k1, k1_value, k2, recalculate=True)
+                                self.add(node_k2, k1)
+                                self.update_of(k2_min_node, node_k2, k2_value, k1, recalculate=True)
+                                self.improved_ls_group = True
+                                return True
+
+    def LS_change_group_3_exchange(self, k1):
+        min_nodes_k1 = self.dict_disp_group[k1][0]
+        nodes_list_k1 = [i for i in min_nodes_k1]
+        for k2 in range(self.groups):
+            if k1 != k2:
+                for node_k1 in nodes_list_k1:
+                    for node_k2 in self.selected_dict[k2]:
+                        k1_min_node, k1_value = self.distance_to(node_k1, k2, exclude_list=[node_k2])
+                        if k1_value > self.of:
+                            for k3 in range(self.groups):
+                                if k3 != k2 and k3 != k1:
+                                    for node_k3 in self.selected_dict[k3]:
+                                        k2_min_node, k2_value = self.distance_to(node_k2, k3, exclude_list=[node_k3])
+                                        if k2_value > self.of:
+                                            k3_min_node, k3_value = self.distance_to(node_k3, k1, exclude_list=[node_k1])
+                                            if k3_value > self.of:
+                                                self.selected_dict[k1].remove(node_k1)
+                                                self.selected_dict[k2].remove(node_k2)
+                                                self.selected_dict[k3].remove(node_k3)
+                                                self.add(node_k1, k2)
+                                                self.update_of(k1_min_node, node_k1, k1_value, k2, recalculate=True)
+                                                self.add(node_k2, k3)
+                                                self.update_of(k2_min_node, node_k2, k2_value, k3, recalculate=True)
+                                                self.add(node_k3, k1)
+                                                self.update_of(k3_min_node, node_k3, k3_value, k1, recalculate=True)
+                                                self.improved_ls_group = True
+                                                return True
+
+
+    def run_VNS(self, max_ls):
+
+        iter = 0
+        fail_ls = 0
+        for _ in range(max_ls):
+
+            if fail_ls > 2:
+                break
+
+            #LS change node
+            if iter %3 == 0:
+                k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
+                improved = self.LS_change_node(k)
+                self.historial.append(self.of)
+                if not improved:
+                    iter += 1
+                    fail_ls += 1
+                else:
+                    fail_ls = 0
+
+            #LS change group
+            elif iter %3 == 1:
+                if self.groups > 1:
+
+                    k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
+                    self.LS_change_group(k1=k)
+                    self.historial.append(self.of)
+                    if not improved:
+                        iter += 1
+                        fail_ls += 1
+                    else:
+                        fail_ls = 0
+            else :
+                if self.groups > 2:
+                        k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
+                        self.LS_change_group_3_exchange(k1=k)
+                        self.historial.append(self.of)
+                        if not improved:
+                            iter += 1
+                            fail_ls += 1
+                        else:
+                            fail_ls = 0
+                else:
+                    fail_ls += 1
 
 
     def find_first_common_element_index(self, list1, list2):
