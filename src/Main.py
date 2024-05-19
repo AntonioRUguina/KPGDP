@@ -18,12 +18,34 @@ def prepare_instance(t):
 
     return prepare_dict
 
+"""
+def test_time(self):
+    import cProfile
+    import pstats
 
+    profiler = cProfile.Profile()
+    profiler.enable()
+    self.test_engine_multiple()
+    profiler.disable()
 
+    stats = pstats.Stats(profiler)
+    stats.strip_dirs()  # Eliminar los directorios para una visualización más clara
+    stats.sort_stats('cumulative')  # Ordenar por tiempo acumulado
+    stats.print_stats()  # Imprimir las estadísticas
+
+    with open('profile_results.txt', 'w') as f:
+        stats = pstats.Stats(profiler, stream=f)
+        stats.strip_dirs()  # Eliminar los directorios para una visualización más clara
+        stats.sort_stats('cumulative')  # Ordenar por tiempo acumulado
+        stats.print_stats()  # Imprimir las estadísticas
+"""
 
 if __name__ == "__main__":
     # Read the file with the instances to execute
     tests = read_test("run_test.txt")
+
+
+
 
     for t in tests:
         print(t.instName)
@@ -37,7 +59,7 @@ if __name__ == "__main__":
         beta_0 = 0.5
         beta_1 = 0.5
         start = time.time()
-        while time.time() - start < 20:
+        while time.time() - start < 120:
             it += 1
             sol = Solution(params_dict)
             beta_0_it = np.random.triangular(0, beta_0, 1, 1)[0]
@@ -48,7 +70,7 @@ if __name__ == "__main__":
                 final_sol = sol
                 beta_0 = beta_0_it
                 beta_1 = beta_1_it
-                print(it,final_sol.historial, final_sol.improved_ls_group, beta_0, beta_1, of_it,)
+                print(it,final_sol.historial, beta_0, beta_1, of_it)
         print("Iterations: ", it)
         print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
               final_sol.selected_dict)
