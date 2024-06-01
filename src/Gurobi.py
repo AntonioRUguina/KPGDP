@@ -3,7 +3,7 @@ import pyomo.environ as pyo
 from pyomo.environ import *
 from pyomo.opt import SolverFactory
 class Solution_Gurobi:
-    def __init__(self, param_dict):
+    def __init__(self, param_dict, max_time):
         self.instance = param_dict["inst"]
         self.instance_name = param_dict['t'].instName
         self.delta = param_dict["delta"]
@@ -20,6 +20,7 @@ class Solution_Gurobi:
         self.groups = self.instance.k
         self.patron = []
         self.p = self.instance.p
+        self.max_time = max_time
 
 
         """"
@@ -31,9 +32,11 @@ class Solution_Gurobi:
         random.seed(t.seed+count)
         """
     def run_algorithm(self):
-        #self.construct_solution_kgpdp(k=self.groups, p= self.p, time_max = 3600)
-        self.construct_solution_kgpdp_compact(k=self.groups, p= self.p, time_max = 3600)
-        #self.construct_solution_pdp()
+        #Kuby
+        self.construct_solution_kgpdp(k=self.groups, p=self.p, time_max=self.max_time)
+        #Sayah
+        self.construct_solution_kgpdp_compact(k=self.groups, p=self.p, time_max=self.max_time)
+        #self.construct_solution_kgpdp_sum(k=self.groups, p= self.p, time_max = 3600)
 
         #print(self.selected_list, self.of)
 
@@ -103,10 +106,13 @@ class Solution_Gurobi:
 
         model.obj = pyo.Objective(expr=d, sense=maximize)
 
+        print("Model Built")
         opt = SolverFactory('gurobi')
         #opt = SolverFactory('gurobi_direct')
         #opt.options['tmlim'] = 10
         opt.options['TimeLimit'] = time_max
+        # If there are memory problems, then reduce the Threads
+        # opt.options['Threads'] = 2
         results = opt.solve(model)
         d_value = pyo.value(d)
 
@@ -119,7 +125,6 @@ class Solution_Gurobi:
 
 
         print('d:', d_value)
-        """"
         #X_value = [pyo.value(X[i]) for i in range(n)]
         solution_dict = {k: [] for k in range(0, k)}
         for k in range(0, k):
@@ -128,9 +133,6 @@ class Solution_Gurobi:
                     solution_dict[k].append(i)
 
         print (solution_dict)
-
-        #print('X:', X_value)
-        """
 
         #return sol
 
@@ -184,12 +186,13 @@ class Solution_Gurobi:
             telescopic_sum += u[m] * (sorted_distances[m+1] - sorted_distances[m])
         model.obj = pyo.Objective(expr=Dm - telescopic_sum , sense=maximize)
 
+        print("Model Built")
         opt = SolverFactory('gurobi')
         # opt = SolverFactory('gurobi_direct')
         # opt.options['tmlim'] = 10
         opt.options['TimeLimit'] = time_max
-        opt.options['NodeFileStart'] = 0.2
-        opt.options['Threads'] = 2
+        # If there are memory problems, then reduce the Threads
+        # opt.options['Threads'] = 2
         results = opt.solve(model)
 
 
@@ -212,7 +215,83 @@ class Solution_Gurobi:
 
         #return sol
 
-"""
+
+    """
+    def construct_solution_kgpdp_sum(self, k, p,time_max):
+
+        instance = self.instance
+        n = instance.n
+
+        model = pyo.ConcreteModel()
+
+        model.i = RangeSet(0, n)
+        model.k = RangeSet(0, k)
+
+        model.X = pyo.Var(model.i, model.k, within=Binary)
+
+        model.Z = pyo.Var(model.i, model.i, model.k, within=Binary)
+
+
+        #model.x = pyo.Var(range(n^2), within=Binary, bounds=(0, None))
+
+        X = model.X
+
+        Z = model.Z
+        M = np.max(self.distance)
+
+        model.C1 = pyo.ConstraintList()
+        for ki in range(k):
+            x_sum = sum([X[i, ki] for i in range(n)])
+            model.C1.add(expr= x_sum == p)
+
+        model.C2 = pyo.ConstraintList()
+
+        for i in range(n):
+            x_sum = sum([X[i, ki] for ki in range(k)])
+            model.C2.add(expr=x_sum <= 1)
+
+        model.C3 = pyo.ConstraintList()
+        model.C4 = pyo.ConstraintList()
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                for ki in range(k):
+                    model.C3.add(expr=X[i, ki] + X[k, ki] <= 1 + Z[i, j, ki])
+                    model.C4.add(expr=X[i, ki] >= Z[i, j, ki])
+                    model.C4.add(expr=X[j, ki] >= Z[i, j, ki])
+
+        model.C5 = pyo.ConstraintList()
+        for i in range(n):
+            for j in range(0, i):
+                for ki in range(k):
+                    model.C5.add(expr= 0 == Z[i, j, ki])
+
+        sum_z = sum(self.distance[i,j] * Z[i, j, k1] for i in range(n) for j in range(i+1, n) for k1 in range(k))
+        model.obj = pyo.Objective(expr=sum_z, sense=maximize)
+
+        print("Model Built")
+        opt = SolverFactory('gurobi')
+        #opt = SolverFactory('gurobi_direct')
+        #opt.options['tmlim'] = 10
+        opt.options['TimeLimit'] = time_max
+        results = opt.solve(model)
+
+        # Función para guardar el diccionario en un archivo de texto
+
+        #time_value = self.extract_time_from_string(str(results["Solver"]))
+        # Guardar el diccionario en 'data.txt'
+        #self.save_dict_to_txt('output.txt', d_value, self.instance_name,"kuby", time_value)
+
+
+        #X_value = [pyo.value(X[i]) for i in range(n)]
+        solution_dict = {k: [] for k in range(0, k)}
+        for k in range(0, k):
+            for i in range(0, n):
+                if pyo.value(X[i, k]) > 0:
+                    solution_dict[k].append(i)
+
+        print (solution_dict)
+
     def construct_solution_pdp(self):
         # pdp
         instance = self.instance
@@ -261,4 +340,4 @@ class Solution_Gurobi:
 
         print('X:', X_value)
         print('d:', d_value)
-"""
+    """

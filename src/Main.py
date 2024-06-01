@@ -49,6 +49,7 @@ if __name__ == "__main__":
 
     for t in tests:
         print(t.instName)
+        np.random.seed(t.seed)
         params_dict = prepare_instance(t)
         #sol = Solution(params_dict, p)
         #sol.analizar_patron([5, 6, 12, 16, 18, 21, 22, 24, 25, 26, 27, 28, 33, 36, 37, 40, 42, 44, 45, 49] )
@@ -59,7 +60,7 @@ if __name__ == "__main__":
         beta_0 = 0.5
         beta_1 = 0.5
         start = time.time()
-        while time.time() - start < 120:
+        while time.time() - start < t.max_time:
             it += 1
             sol = Solution(params_dict)
             beta_0_it = np.random.triangular(0, beta_0, 1, 1)[0]
