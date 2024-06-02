@@ -60,18 +60,20 @@ if __name__ == "__main__":
         beta_0 = 0.5
         beta_1 = 0.5
         start = time.time()
+        max_of = 0
         while time.time() - start < t.max_time:
             it += 1
-            sol = Solution(params_dict)
+            sol = Solution(params_dict, max_of)
             beta_0_it = np.random.triangular(0, beta_0, 1, 1)[0]
             beta_1_it = np.random.triangular(0, beta_1, 1, 1)[0]
             of_it = sol.run_algorithm(beta_0=beta_0_it, beta_1=beta_1_it)
             if of < of_it:
                 of = of_it
+                max_of = of_it
                 final_sol = sol
                 beta_0 = beta_0_it
                 beta_1 = beta_1_it
-                print(it,final_sol.historial, beta_0, beta_1, of_it)
+                print(it, final_sol.historial, beta_0, beta_1, of_it)
         print("Iterations: ", it)
         print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
               final_sol.selected_dict)
