@@ -2,7 +2,7 @@ from Utils.utils import (read_test,build_full_path)
 from Utils.Instance import Instance
 import numpy as np
 import random
-from Algorithm import Solution
+from AlgorithmByGroups import Solution
 import time
 
 def prepare_instance(t):
@@ -74,19 +74,11 @@ if __name__ == "__main__":
                 beta_0 = beta_0_it
                 beta_1 = beta_1_it
                 print(it, final_sol.historial, beta_0, beta_1, of_it)
-        print("Iterations: ", it)
-        print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
-              final_sol.selected_dict)
+        #print("Iterations: ", it)
+        #print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
+        #      final_sol.selected_dict)
+        final_sol.save_dict_to_txt('outputAlgo.txt', of, t.instName, "BiasByGroup", t.max_time)
         #write_data_dinamic(sol, t, "output.txt")
     #sys.exit()
 
-#GKD-b_11_n50_2_20.txt;110;1000
-#GKD-b_20_n50_2_30.txt;110;1000
-#GKD-b_41_n150_2_20.txt;110;1000
-#GKD-b_41_n150_5_30.txt;110;1000
-#GKD-b_50_n150_2_20.txt;110;1000
-#GKD-b_50_n150_5_30.txt;110;1000
-#GKD-c_01_n500_2_20.txt;110;1000
-#GKD-c_01_n500_10_30.txt;110;1000
-#MDG-b_01_n500_2_20.txt;110;1000
 

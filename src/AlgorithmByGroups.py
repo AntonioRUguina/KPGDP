@@ -27,8 +27,16 @@ class Solution:
         self.group_last_selection = None
         self.max_of = max_of
         self.coef_bound = 0.7
+        self.integers_list = []
         self.end_iteration = False
 
+    def generate_random_ordered_integers(self):
+        # Step 1: Generate a list of the first n integers
+        integers_list = list(range(self.instance.n))
+
+        # Step 2: Shuffle the list randomly
+        random.shuffle(integers_list)
+        self.integers_list = integers_list
 
 
         """"
@@ -41,42 +49,22 @@ class Solution:
         """
 
     def run_algorithm(self, beta_0, beta_1):
-
-
+        #start = time.time()
+        self.generate_random_ordered_integers()
         self.construct_solution(beta_0, beta_1)
 
-        max_ls = 100
-        self.historial.append(self.of)
+        if not self.end_iteration:
+            max_ls = 150
+            self.historial.append(self.of)
+            self.run_exchage_LS(max_ls)
+
         #print(self.selected_list, self.of)
+        #print("construccion" , time.time() - start)
+        #start = time.time()
 
         #self.run_VNS(max_ls)
-        if not self.end_iteration:
-            self.run_exchage_LS(max_ls)
-        """
-        for i in range(max_ls):
-            k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
-            improved = self.LS_change_node(k)
-            self.historial.append(self.of)
-            if not improved:
-                break
-
-        if self.groups > 1:
-            for i in range(max_ls):
-                k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
-                self.LS_change_group(k1=k)
-                self.historial.append(self.of)
-
-                if not improved:
-                    break
-        if self.groups > 2:
-            for i in range(max_ls):
-                k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
-                self.LS_change_group_3_exchange(k1=k)
-                self.historial.append(self.of)
-
-                if not improved:
-                    break
-        """
+        #print(len(self.historial))
+        #print("ls", time.time() - start)
 
         return self.of
 
@@ -135,6 +123,7 @@ class Solution:
 
 
     def construct_solution(self, beta_0, beta_1):
+
         """
         original Heuristic
         Constructive heuristic (Deterministic Version)
@@ -153,48 +142,54 @@ class Solution:
                     stop = False
                 self.sorted_distances.pop(index_selected)
 
-        cl = self.create_cl()
-
+        cl_groups = self.create_cl_groups()
         # 0 dado que es el greedy
-        while not self.is_feasible():
-            if len(cl) < 1:
-                self.of = 0
-                self.end_iteration = True
-                break
-            if self.group_last_selection is not None:
-                index_selected = self.find_first_with_group(cl, self.group_last_selection)
-                self.group_last_selection = None
-            else:
-                index_selected = int((np.log(np.random.random()) / np.log(1 - beta_1))) % len(cl)
+        for it in range(self.p-2):
+            for k in range(0, self.groups):
+                cl = cl_groups[k]
+                candidate_ok = False
+                index_selected = 0
+                while not candidate_ok and not self.end_iteration:
+                    if len(cl) < 1:
+                        self.of = 0
+                        self.end_iteration = True
+                        break
+                    if it == self.p-1:
+                        index_selected = self.find_first_with_group(cl, k)
+                    else:
+                        index_selected = int((np.log(np.random.random()) / np.log(1 - beta_1))) % len(cl)
 
-            if index_selected is None:
-                self.of = 0
-                self.end_iteration = True
-                #print("hola")
-                break
-
-            else:
-                c = cl.pop(index_selected)
-                self.add(c.v, c.group)
-                self.update_of(c.v, c.closest_v, c.cost, c.group)
-                self.update_cl(cl, c)
-
+                    if index_selected is None:
+                        self.of = 0
+                        self.end_iteration = True
+                        break
+                    else:
+                        if cl[index_selected].v not in self.selected_list:
+                            candidate_ok = True
+                        else:
+                            cl.pop(index_selected)
+                if not self.end_iteration:
+                    c = cl.pop(index_selected)
+                    self.add(c.v, c.group)
+                    self.update_of(c.v, c.closest_v, c.cost, c.group)
+                    self.update_cl(cl, c)
 
         #return sol
-    def create_cl(self):
+
+    def create_cl_groups(self):
         instance = self.instance
         n = instance.n
         # Candidate List of nodes
-        cl = []
-        for v in range(0, n):
-            if v in self.selected_list:
-                continue
-            for k in range(0, self.groups):
+        cl = {i : [] for i in range(self.groups)}
+        for k in range(0, self.groups):
+            for v in range(0, n):
+                if v in self.selected_list:
+                    continue
                 v_min, min_dist = self.distance_to(v, k)
                 if min_dist > self.max_of * self.coef_bound:
                     c = Candidate(v, v_min, min_dist, k)
-                    cl.append(c)
-        cl.sort(key=lambda x: x.cost, reverse=True)  # ordena distancia de mayor a menor
+                    cl[k].append(c)
+            cl[k].sort(key=lambda x: x.cost, reverse=True)  # ordena distancia de mayor a menor
         return cl
 
     def update_cl(self, cl, last_added):
@@ -204,7 +199,7 @@ class Solution:
         for c in cl:
             if c.cost < self.max_of * self.coef_bound or c.v in self.selected_list or self.n_selected[c.group] == self.p:
                 to_remove.add(c)
-            elif c.group == last_added.group:
+            else:
                 d_to_last = dict_last[c.v]
                 if d_to_last < self.max_of * self.coef_bound:
                     to_remove.add(c)
@@ -355,7 +350,7 @@ class Solution:
             critical_nodes = {}
             for group, list_nodes in self.selected_dict.items():
                 for i in range(self.p - 1):
-                    for j in range(i+1, self.p):
+                    for j in range(i + 1, self.p):
                         if self.instance.distance[list_nodes[i], list_nodes[j]] == self.of:
                             critical_nodes.setdefault(list_nodes[i], group)
                             critical_nodes.setdefault(list_nodes[j], group)
@@ -424,148 +419,3 @@ class Solution:
             if not improved:
                 break
 
-    def _exchange_nodes(self, c_node, group, v, v_group, blacklist):
-        self.selected_dict[group].remove(c_node)
-        self.selected_dict[v_group].remove(v)
-        self.selected_list.remove(c_node)
-        self.selected_list.append(v)
-        self.add(c_node, v_group)
-        self.update_of(0, c_node, 0, v_group, recalculate=True)
-        self.add(v, group)
-        self.update_of(0, v, 0, group, recalculate=True)
-        self.historial.append(self.of)
-        blacklist.update([c_node, v])
-
-    def _three_way_exchange(self, c_node, group, v, v_group, v2, blacklist):
-        self.selected_dict[group].remove(c_node)
-        self.selected_dict[v_group].remove(v)
-        self.selected_list.remove(c_node)
-        self.selected_list.append(v2)
-        self.add(v, group)
-        self.update_of(0, v, 0, group, recalculate=True)
-        self.add(v2, v_group)
-        self.update_of(0, v2, 0, v_group, recalculate=True)
-        self.historial.append(self.of)
-        blacklist.update([c_node, v, v2])
-
-    def _replace_node(self, c_node, group, v, blacklist):
-        self.selected_dict[group].remove(c_node)
-        self.selected_list.remove(c_node)
-        self.selected_list.append(v)
-        self.add(v, group)
-        self.update_of(0, v, 0, group, recalculate=True)
-        self.historial.append(self.of)
-        blacklist.update([c_node, v])
-
-    def run_VNS(self, max_ls):
-
-        iter = 0
-        fail_ls = 0
-        for _ in range(max_ls):
-
-            if fail_ls > 2:
-                break
-
-            #LS change node
-            if iter % 3  == 0:
-                k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
-                improved = self.LS_change_node(k)
-                self.historial.append(self.of)
-                if not improved:
-                    iter += 1
-                    fail_ls += 1
-                else:
-                    fail_ls = 0
-
-            #LS change group
-            elif iter % 3 == 1:
-                if self.groups > 1:
-
-                    k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
-                    improved = self.LS_change_group(k1=k)
-                    self.historial.append(self.of)
-                    if not improved:
-                        iter += 1
-                        fail_ls += 1
-                    else:
-                        fail_ls = 0
-                else:
-                    iter += 1
-                    fail_ls += 1
-            #3-exchange
-            elif iter % 3 == 2:
-                if self.groups > 2:
-                        k = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
-                        improved = self.LS_change_group_3_exchange(k1=k)
-                        self.historial.append(self.of)
-                        if not improved:
-                            iter += 1
-                            fail_ls += 1
-                        else:
-                            fail_ls = 0
-                else:
-                    iter += 1
-                    fail_ls += 1
-            """        
-            else :
-                kmin = min(self.dict_disp_group, key=lambda x: self.dict_disp_group[x][1])
-                improved = False
-                for k in range(self.groups):
-                    if k != kmin:
-                        improved = self.LS_change_node(k) or improved
-                        self.historial.append(self.of)
-                iter += 1
-                if not improved:
-                    fail_ls += 1
-            """
-
-
-    def find_first_common_element_index(self, list1, list2):
-        for index, element in enumerate(list1):
-            if element in list2:
-                return index
-        return None
-
-    def find_first_common_element_groups(self, list1, list2):
-        for index, element in enumerate(list1):
-            if element[0] in list2[element[1]]:
-                return index
-        return None
-
-"""
-    def analizar_patron(self, list_groups):
-
-        for k in range(0, self.groups):
-            list = list_groups[k]
-            i = 0
-            stop = True
-            while stop:
-                index_selected = i
-                edge = self.sorted_distances[index_selected]
-                if (edge.v1 in list and edge.v2 in list and
-                        (edge.v1 not in self.selected_list and edge.v2 not in self.selected_list)):
-                    self.add(edge.v1, k)
-                    self.add(edge.v2, k)
-                    self.update_of(edge.v1, edge.v2, edge.distance, k)
-                    stop = False
-                    self.patron.append(index_selected)
-                i += 1
-
-        cl = self.create_cl()
-
-        real_alpha = 0
-        while len(self.selected_list) < self.p*2:
-            v_values = [[c.v, c.group] for c in cl]
-            index_sol = self.find_first_common_element_groups(v_values, list_groups)
-            self.patron.append(index_sol)
-            c = cl.pop(index_sol)
-            self.add(c.v, c.group)
-            self.update_cl(cl, c)
-            self.update_of(c.v, c.closest_v, c.cost, c.group)
-        plt.plot(self.patron, marker='o')
-        plt.show()
-        print(self.of)
-
-        # return sol
-
-"""

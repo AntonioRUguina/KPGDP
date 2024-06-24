@@ -90,12 +90,14 @@ class Solution_Gurobi:
         for ki in range(k):
             x_sum = sum([X[i, ki] for i in range(n)])
             model.C1.add(expr= x_sum == p)
+        print("c1 Built")
 
         model.C2 = pyo.ConstraintList()
 
         for i in range(n):
             x_sum = sum([X[i, ki] for ki in range(k)])
             model.C2.add(expr=x_sum <= 1)
+        print("c2 Built")
 
         model.C3 = pyo.ConstraintList()
         for i in range(n-1):
@@ -103,6 +105,7 @@ class Solution_Gurobi:
                 for ki in range(k):
                     model.C3.add(expr= M*X[i, ki] + M*X[j, ki] + d <= 2*M + self.distance[i, j] )
 
+        print("c3 Built")
 
         model.obj = pyo.Objective(expr=d, sense=maximize)
 
@@ -110,9 +113,10 @@ class Solution_Gurobi:
         opt = SolverFactory('gurobi')
         #opt = SolverFactory('gurobi_direct')
         #opt.options['tmlim'] = 10
-        opt.options['TimeLimit'] = time_max
+        #opt.options['TimeLimit'] = time_max
         # If there are memory problems, then reduce the Threads
-        # opt.options['Threads'] = 2
+        opt.options['Threads'] = 1
+
         results = opt.solve(model)
         d_value = pyo.value(d)
 
@@ -163,12 +167,14 @@ class Solution_Gurobi:
         for ki in range(k):
             x_sum = sum([X[i, ki] for i in range(n)])
             model.C1.add(expr= x_sum == p)
+        print("c1 Built")
 
         model.C2 = pyo.ConstraintList()
 
         for i in range(n):
             x_sum = sum([X[i, ki] for ki in range(k)])
             model.C2.add(expr=x_sum <= 1)
+        print("c2 Built")
 
         model.C3 = pyo.ConstraintList()
         for i in range(n-1):
@@ -176,10 +182,13 @@ class Solution_Gurobi:
                 index = sorted_distances.index(self.distance[i, j])
                 for ki in range(k):
                     model.C3.add(expr=  X[i, ki] + X[j, ki] <= 1 + u[index])
+        print("c3 Built")
 
         model.C4 = pyo.ConstraintList()
         for m in range(1, len(sorted_distances)):
             model.C4.add(expr= u[m-1] <= u[m])
+
+        print("c4 Built")
 
         telescopic_sum = 0
         for m in range(0, len(sorted_distances)-1):
@@ -192,12 +201,13 @@ class Solution_Gurobi:
         # opt.options['tmlim'] = 10
         opt.options['TimeLimit'] = time_max
         # If there are memory problems, then reduce the Threads
-        # opt.options['Threads'] = 2
+        #opt.options['Threads'] = 1
         results = opt.solve(model)
 
 
 
-        #X_value = [pyo.value(X[i]) for i in range(n)]
+        X_value = [[i, ki] for i in range(n) for ki in range(k) if pyo.value(X[i, ki]) > 0]
+        print(X_value)
         #print([pyo.value(u[i]) for i in range(len(sorted_distances))])
         solution = []
         for m in range(0, len(sorted_distances)):
