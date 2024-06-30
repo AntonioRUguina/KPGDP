@@ -1,14 +1,12 @@
 import random
-
 from Utils.objects import (Candidate)
 import numpy as np
-#import matplotlib.pyplot as plt
-import time
-from copy import deepcopy
-class Solution:
-    def __init__(self, param_dict, max_of):
+
+
+class Solution_Group:
+    def __init__(self, param_dict, max_of, active_ls3):
         self.instance = param_dict["inst"]
-        self.delta = param_dict["delta"]
+        self.max_of = max_of
         self.sorted_distances = self.instance.sorted_distances.copy()
         self.distance = self.instance.distance
         self.selected_list = []
@@ -18,17 +16,14 @@ class Solution:
         self.v_min2 = -1
         self.of = self.sorted_distances[0].distance * 10
         self.dict_disp_group = {k: [] for k in range(0, self.instance.k)}
-        self.capacity = 0
-        self.time = []
         self.groups = self.instance.k
-        self.patron = []
         self.historial = []
         self.p = self.instance.p
         self.group_last_selection = None
-        self.max_of = max_of
         self.coef_bound = 0.7
         self.integers_list = []
         self.end_iteration = False
+        self.active_ls3 = active_ls3
 
     def generate_random_ordered_integers(self):
         # Step 1: Generate a list of the first n integers
@@ -38,39 +33,20 @@ class Solution:
         random.shuffle(integers_list)
         self.integers_list = integers_list
 
-
-        """"
-        self.weight = weight
-        self.max_capacity = -1
-        self.max_min_dist = -1
-        self.real_alpha = real_alpha
-        # Dynamic enviroment
-        random.seed(t.seed+count)
-        """
-
     def run_algorithm(self, beta_0, beta_1):
-        #start = time.time()
         self.generate_random_ordered_integers()
         self.construct_solution(beta_0, beta_1)
 
         if not self.end_iteration:
             max_ls = 150
             self.historial.append(self.of)
-            self.run_exchage_LS(max_ls)
-
-        #print(self.selected_list, self.of)
-        #print("construccion" , time.time() - start)
-        #start = time.time()
-
-        #self.run_VNS(max_ls)
-        #print(len(self.historial))
-        #print("ls", time.time() - start)
+            self.run_exchage_LS(max_ls, self.active_ls3)
 
         return self.of
 
-    def save_dict_to_txt(self, filename, d_value, instance_name, model, time):
+    def save_dict_to_txt(self, filename, d_value, instance_name, model, time, seed):
         with open(filename, 'a') as file:
-                file.write(f"{instance_name} {model} {time}: {d_value}\n")
+                file.write(f"{instance_name} {seed} {model} {time}: {d_value}\n ")
 
     def update_of(self, v_min1, v_min2, of, group, recalculate= False):
         if recalculate:
@@ -121,14 +97,7 @@ class Solution:
                 return index
         return None
 
-
     def construct_solution(self, beta_0, beta_1):
-
-        """
-        original Heuristic
-        Constructive heuristic (Deterministic Version)
-        :return:
-        """
 
         for k in range(0, self.groups):
             stop = True
@@ -220,127 +189,13 @@ class Solution:
                     v_min = s
         return v_min, min_dist
 
-
-
-    def LS_change_node(self, k):
-        min_nodes = self.dict_disp_group[k][0]
-        nodes_list = [i for i in min_nodes]
-        n = self.instance.n
-        group_of = self.dict_disp_group[k][1]
-        improved = False
-        for node in nodes_list:
-            for v in range(0, n):
-                if v in self.selected_list:
-                    continue
-                else:
-                    v_min, min_dist = self.distance_to(v, k, exclude_list=[node])
-                    if min_dist > group_of:
-                        self.selected_dict[k].remove(node)
-                        self.selected_list.remove(node)
-                        self.add(v, k)
-                        self.update_of(v_min, v, min_dist, k, recalculate=True)
-                        group_of = min_dist
-                        improved = True
-                        break
-            if improved:
-                break
-        return improved
-
-    def LS_change_group(self, k1):
-        min_nodes_k1 = self.dict_disp_group[k1][0]
-        nodes_list_k1 = list(min_nodes_k1)  # Explicit conversion to list if it's not already
-        k1_nodes_set = set(self.selected_dict[k1])  # Convert selected_dict[k1] to a set for O(1) lookups
-
-        for k2 in range(self.groups):
-            if k1 == k2:
-                continue
-
-            k2_nodes = self.selected_dict[k2]
-            for node_k1 in nodes_list_k1:
-                for node_k2 in k2_nodes:
-                    # Check the distance from node_k1 to the closest node in k2, excluding node_k2
-                    k1_min_node, k1_value = self.distance_to(node_k1, k2, exclude_list=[node_k2])
-                    if k1_value <= self.of:
-                        continue
-
-                    # Check the distance from node_k2 to the closest node in k1, excluding node_k1
-                    k2_min_node, k2_value = self.distance_to(node_k2, k1, exclude_list=[node_k1])
-                    if k2_value <= self.of:
-                        continue
-
-                    # Perform the swap
-                    self.selected_dict[k1].remove(node_k1)
-                    self.selected_dict[k2].remove(node_k2)
-                    self.add(node_k1, k2)
-                    self.update_of(k1_min_node, node_k1, k1_value, k2, recalculate=True)
-                    self.add(node_k2, k1)
-                    self.update_of(k2_min_node, node_k2, k2_value, k1, recalculate=True)
-
-                    return True
-
-        return False
-
-    def LS_change_group_3_exchange(self, k1):
-        min_nodes_k1 = self.dict_disp_group[k1][0]
-        nodes_list_k1 = list(min_nodes_k1)  # Convert to list explicitly if necessary
-
-        k1_selected_set = set(self.selected_dict[k1])  # Convert to set for faster lookups
-
-        for k2 in range(self.groups):
-            if k1 == k2:
-                continue
-
-            k2_selected = self.selected_dict[k2]
-
-            for node_k1 in nodes_list_k1:
-                for node_k2 in k2_selected:
-                    # Distance check between node_k1 and the closest node in k2, excluding node_k2
-                    k1_min_node, k1_value = self.distance_to(node_k1, k2, exclude_list=[node_k2])
-                    if k1_value <= self.of:
-                        continue
-
-                    for k3 in range(self.groups):
-                        if k3 == k1 or k3 == k2:
-                            continue
-
-                        k3_selected = self.selected_dict[k3]
-
-                        for node_k3 in k3_selected:
-                            # Distance check between node_k2 and the closest node in k3, excluding node_k3
-                            k2_min_node, k2_value = self.distance_to(node_k2, k3, exclude_list=[node_k3])
-                            if k2_value <= self.of:
-                                continue
-
-                            # Distance check between node_k3 and the closest node in k1, excluding node_k1
-                            k3_min_node, k3_value = self.distance_to(node_k3, k1, exclude_list=[node_k1])
-                            if k3_value <= self.of:
-                                continue
-
-                            # Perform the 3-way exchange
-                            self.selected_dict[k1].remove(node_k1)
-                            self.selected_dict[k2].remove(node_k2)
-                            self.selected_dict[k3].remove(node_k3)
-
-                            self.add(node_k1, k2)
-                            self.update_of(k1_min_node, node_k1, k1_value, k2, recalculate=True)
-
-                            self.add(node_k2, k3)
-                            self.update_of(k2_min_node, node_k2, k2_value, k3, recalculate=True)
-
-                            self.add(node_k3, k1)
-                            self.update_of(k3_min_node, node_k3, k3_value, k1, recalculate=True)
-
-                            return True
-
-        return False
-
     def find_group_by_value(self, value):
         for key, values in self.selected_dict.items():
             if value in values:
                 return key
         return None
 
-    def run_exchage_LS(self, max_ls):
+    def run_exchage_LS(self, max_ls, active_ls3):
 
         # First look up all the critical nodes.
 
@@ -348,12 +203,19 @@ class Solution:
 
         for _ in range(max_ls):
             critical_nodes = {}
+            critical_found = False
             for group, list_nodes in self.selected_dict.items():
                 for i in range(self.p - 1):
                     for j in range(i + 1, self.p):
                         if self.instance.distance[list_nodes[i], list_nodes[j]] == self.of:
                             critical_nodes.setdefault(list_nodes[i], group)
                             critical_nodes.setdefault(list_nodes[j], group)
+                            critical_found=True
+                            break
+                    if critical_found:
+                        break
+                if critical_found:
+                    break
 
             blacklist = set()
             for c_node, group in critical_nodes.items():
@@ -361,7 +223,8 @@ class Solution:
                     continue
                 improved = False
 
-                for v in range(n):
+                for num1 in range(n):
+                    v = self.integers_list[num1]
                     if v == c_node:
                         continue
                     if self.distance_to(v, group, [c_node])[1] > self.of:
@@ -384,26 +247,30 @@ class Solution:
                                     improved = True
                                     break
                                 else:
-                                    for v2 in range(n):
-                                        if v2 != c_node and v2 != v:
-                                            if v2 in self.selected_list:
-                                                continue
-                                            else:
-                                                if self.distance_to(v2, v_group, [v])[1] > self.of:
-                                                    self.selected_dict[group].remove(c_node)
-                                                    self.selected_dict[v_group].remove(v)
+                                    if active_ls3:
+                                        for num2 in range(n):
+                                            v2 = self.integers_list[num2]
+                                            if v2 != c_node and v2 != v:
+                                                if v2 in self.selected_list:
+                                                    continue
+                                                else:
+                                                    if self.distance_to(v2, v_group, [v])[1] > self.of:
+                                                        self.selected_dict[group].remove(c_node)
+                                                        self.selected_dict[v_group].remove(v)
 
-                                                    self.selected_list.remove(c_node)
-                                                    self.selected_list.append(v2)
-                                                    self.add(v, group)
-                                                    self.update_of(0, v, 0, group, recalculate=True)
-                                                    self.add(v2, v_group)
-                                                    self.update_of(0, v2, 0, v_group, recalculate=True)
-                                                    self.historial.append(self.of)
-                                                    blacklist.update([c_node, v, v2])
+                                                        self.selected_list.remove(c_node)
+                                                        self.selected_list.append(v2)
+                                                        self.add(v, group)
+                                                        self.update_of(0, v, 0, group, recalculate=True)
+                                                        self.add(v2, v_group)
+                                                        self.update_of(0, v2, 0, v_group, recalculate=True)
+                                                        self.historial.append(self.of)
+                                                        blacklist.update([c_node, v, v2])
 
-                                                    improved = True
-                                                    break
+                                                        improved = True
+                                                        break
+                                    else:
+                                        continue
                                     if improved:
                                         break
                         else:
@@ -416,6 +283,7 @@ class Solution:
                             blacklist.update([c_node, v])
                             improved = True
                             break
+                if improved:
+                    break
             if not improved:
                 break
-

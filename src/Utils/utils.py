@@ -39,8 +39,12 @@ def build_full_path(relative_path):
 
     # Retorna la ruta completa
     return os.path.join(base_path, relative_path)
-"""
 
+
+
+
+
+"""
 if __name__ == "__main__":
 
     import os
@@ -56,7 +60,7 @@ if __name__ == "__main__":
     with open(output_file, 'w') as file:
         # Write the required information for each .txt file
         for txt_file in txt_files:
-            file.write(f"{txt_file};1;60\n")
+            file.write(f"{txt_file};7357;60\n")
 
     print(f"File names written to {output_file}")
 """
@@ -123,7 +127,7 @@ if __name__ == "__main__":
     print(df)
 
     # Export the DataFrame to an Excel file
-    output_file = "../test/resultsKPGDP_v2.csv"
+    output_file = "../test/outputNew.csv"
     df.to_csv(output_file, index=False, sep=';', decimal=",")
 
     #output_file
