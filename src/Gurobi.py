@@ -42,6 +42,25 @@ class Solution_Gurobi:
 
         return self.of
 
+    def run_algorithm_chained(self):
+        # Sayah
+        selected_list = []
+        max_time = int(self.max_time/self.groups)
+        for k in range(self.groups):
+            indices_to_remove = self.construct_solution_kgpdp_compact_chained(p=self.p,
+                                                                         time_max=max_time)
+
+            # Remove rows
+            self.distance = [row for i, row in enumerate(self.distance) if i not in indices_to_remove]
+
+            # Remove columns
+            self.distance = [[elem for j, elem in enumerate(row) if j not in indices_to_remove] for row in self.distance]
+
+        # self.construct_solution_kgpdp_sum(k=self.groups, p= self.p, time_max = 3600)
+
+        # print(self.selected_list, self.of)
+
+        return self.of
     def extract_time_from_string(self,text):
         try:
             # Split the text by lines
@@ -224,6 +243,78 @@ class Solution_Gurobi:
 
 
         #return sol
+
+    def construct_solution_kgpdp_compact_chained(self, p, time_max):
+        # pdp
+        instance = self.instance
+        n = len(self.distance)
+        model = pyo.ConcreteModel()
+
+        Dm = np.max(self.distance)
+        sorted_distances = list(dict.fromkeys([i.distance for i in self.sorted_distances]))
+        sorted_distances.reverse()
+        model.i = RangeSet(0, n)
+        model.M = RangeSet(0, len(sorted_distances))
+
+        model.X = pyo.Var(model.i, within=Binary)
+
+        model.u = pyo.Var(model.M, within=Binary)
+
+        # model.x = pyo.Var(range(n^2), within=Binary, bounds=(0, None))
+
+        X = model.X
+
+        u = model.u
+
+        model.C1 = pyo.ConstraintList()
+        x_sum = sum([X[i] for i in range(n)])
+        model.C1.add(expr=x_sum == p)
+        print("c1 Built")
+
+        model.C2 = pyo.ConstraintList()
+
+        model.C3 = pyo.ConstraintList()
+        for i in range(n - 1):
+            for j in range(i + 1, n):
+                index = sorted_distances.index(self.distance[i][j])
+                model.C3.add(expr=X[i] + X[j] <= 1 + u[index])
+        print("c3 Built")
+
+        model.C4 = pyo.ConstraintList()
+        for m in range(1, len(sorted_distances)):
+            model.C4.add(expr=u[m - 1] <= u[m])
+
+        print("c4 Built")
+
+        telescopic_sum = 0
+        for m in range(0, len(sorted_distances) - 1):
+            telescopic_sum += u[m] * (sorted_distances[m + 1] - sorted_distances[m])
+        model.obj = pyo.Objective(expr=Dm - telescopic_sum, sense=maximize)
+
+        print("Model Built")
+        opt = SolverFactory('gurobi')
+        # opt = SolverFactory('gurobi_direct')
+        # opt.options['tmlim'] = 10
+        opt.options['TimeLimit'] = time_max
+        # If there are memory problems, then reduce the Threads
+        # opt.options['Threads'] = 1
+        results = opt.solve(model)
+
+        # print([pyo.value(u[i]) for i in range(len(sorted_distances))])
+        solution = []
+        for m in range(0, len(sorted_distances)):
+            if pyo.value(u[m]) > 0:
+                solution.append(sorted_distances[m])
+                print(solution)
+                time_value = self.extract_time_from_string(str(results["Solver"]))
+                # Guardar el diccionario en 'data.txt'
+                self.save_dict_to_txt('outputTESTCHAINED.txt', sorted_distances[m], self.instance_name, "Chained", time_value)
+                break
+        # print(solution)
+
+        selected_list = [i for i in range(len(self.distance)) if pyo.value(X[i]) > 0]
+
+        return selected_list
 
 
     """

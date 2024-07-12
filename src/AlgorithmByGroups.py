@@ -37,10 +37,10 @@ class Solution_Group:
         self.generate_random_ordered_integers()
         self.construct_solution(beta_0, beta_1)
 
-        if not self.end_iteration:
-            max_ls = 150
-            self.historial.append(self.of)
-            self.run_exchage_LS(max_ls, self.active_ls3)
+        #if not self.end_iteration:
+            #max_ls = 150
+            #self.historial.append(self.of)
+            #self.run_exchage_LS(max_ls, self.active_ls3)
 
         return self.of
 
