@@ -38,3 +38,6 @@ class Instance:
                     fila += 1
                 i += 1
         self.sorted_distances.sort(key=lambda x: x.distance, reverse=True)
+        #to save in memory take only the 20% of the list
+        top_10_percent_index = int(len(self.sorted_distances) * 0.1)
+        self.sorted_distances = self.sorted_distances[:top_10_percent_index]
