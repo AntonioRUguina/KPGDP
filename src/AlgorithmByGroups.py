@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Solution_Group:
-    def __init__(self, param_dict, max_of, active_ls3):
+    def __init__(self, param_dict, max_of, use_ls, active_ls3):
         self.instance = param_dict["inst"]
         self.max_of = max_of
         self.sorted_distances = self.instance.sorted_distances.copy()
@@ -24,6 +24,7 @@ class Solution_Group:
         self.integers_list = []
         self.end_iteration = False
         self.active_ls3 = active_ls3
+        self.use_ls = use_ls
 
     def generate_random_ordered_integers(self):
         # Step 1: Generate a list of the first n integers
@@ -36,11 +37,12 @@ class Solution_Group:
     def run_algorithm(self, beta_0, beta_1):
         self.generate_random_ordered_integers()
         self.construct_solution(beta_0, beta_1)
-        self.historial.append(self.of)
-        max_ls = 150
+        if self.use_ls:
+            self.historial.append(self.of)
+            max_ls = 150
 
-        #if not self.end_iteration:
-        #    self.run_exchage_LS(max_ls, self.active_ls3)
+            if not self.end_iteration:
+                self.run_exchage_LS(max_ls, self.active_ls3)
 
         return self.of
 

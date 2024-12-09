@@ -27,16 +27,20 @@ def plot_points(points, list1, list2,save_filename=""):
     y_values = [point[1] for point in points]
 
     colors = []
+    sizes = []
     for i in range(len(points)):
         if i in list1:
             colors.append('red')
+            sizes.append(200)
         elif i in list2:
             colors.append('blue')
+            sizes.append(200)
         else:
             colors.append('gray')
+            sizes.append(100)
 
     plt.figure(figsize=(8, 8))
-    plt.scatter(x_values, y_values, c=colors, s=100, marker='o')
+    plt.scatter(x_values, y_values, c=colors, s=sizes, marker='o')
 
 
     plt.xlim(-1, 101)
@@ -58,8 +62,8 @@ def main_map():
     #{0: [14, 15, 19, 30, 54, 64, 68], 1: [4, 5, 21, 32, 41, 50, 67]}
     #{0: [15, 30, 50, 54, 61, 64, 68], 1: [5, 11, 20, 28, 41, 52, 67]}
 
-    list1 = [15, 30, 50, 54, 61, 64, 68]# First list of nodes
-    list2 = [5, 11, 20, 28, 41, 52, 67]  # Second list of nodes
+    list1 = [14, 15, 19, 30, 54, 64, 68]# First list of nodes
+    list2 = [4, 5, 21, 32, 41, 50, 67] # Second list of nodes
 
     plot_points(points, list1, list2, "sum_plot")
 
@@ -201,5 +205,6 @@ def main_boxplo_2_models():
 
 
 if __name__ == "__main__":
-    main_boxplo_2_models()
+    main_map()
+    #main_boxplo_2_models()
 

@@ -14,7 +14,7 @@ import pandas as pd
 
 if __name__ == "__main__":
     # Read the file with the instances to execute
-    tests = read_test("run_test.txt")
+    tests = read_test("run_600.txt")
 
 
     for t in tests:

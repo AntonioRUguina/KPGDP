@@ -47,6 +47,7 @@ class Solution_Gurobi:
         selected_list = []
         max_time = int(self.max_time/self.groups)
         for k in range(self.groups):
+            print(self.instance_name + " " + str(k))
             indices_to_remove = self.construct_solution_kgpdp_compact_chained(p=self.p,
                                                                          time_max=max_time)
 
@@ -269,7 +270,7 @@ class Solution_Gurobi:
         model.C1 = pyo.ConstraintList()
         x_sum = sum([X[i] for i in range(n)])
         model.C1.add(expr=x_sum == p)
-        print("c1 Built")
+        #print("c1 Built")
 
         model.C2 = pyo.ConstraintList()
 
@@ -278,20 +279,20 @@ class Solution_Gurobi:
             for j in range(i + 1, n):
                 index = sorted_distances.index(self.distance[i][j])
                 model.C3.add(expr=X[i] + X[j] <= 1 + u[index])
-        print("c3 Built")
+        #print("c3 Built")
 
         model.C4 = pyo.ConstraintList()
         for m in range(1, len(sorted_distances)):
             model.C4.add(expr=u[m - 1] <= u[m])
 
-        print("c4 Built")
+        #print("c4 Built")
 
         telescopic_sum = 0
         for m in range(0, len(sorted_distances) - 1):
             telescopic_sum += u[m] * (sorted_distances[m + 1] - sorted_distances[m])
         model.obj = pyo.Objective(expr=Dm - telescopic_sum, sense=maximize)
 
-        print("Model Built")
+        #print("Model Built")
         opt = SolverFactory('gurobi')
         # opt = SolverFactory('gurobi_direct')
         # opt.options['tmlim'] = 10
@@ -308,7 +309,7 @@ class Solution_Gurobi:
                 print(solution)
                 time_value = self.extract_time_from_string(str(results["Solver"]))
                 # Guardar el diccionario en 'data.txt'
-                self.save_dict_to_txt('outputTESTCHAINED.txt', sorted_distances[m], self.instance_name, "Chained", time_value)
+                self.save_dict_to_txt('Utils/outputChained.txt', sorted_distances[m], self.instance_name, "Chained", time_value)
                 break
         # print(solution)
 

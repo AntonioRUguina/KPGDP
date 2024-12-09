@@ -63,14 +63,17 @@ if __name__ == "__main__":
             file.write(f"{txt_file};7357;60\n")
 
     print(f"File names written to {output_file}")
+
 """
+"""
+
 if __name__ == "__main__":
     import pandas as pd
     import re
 
     # Input data
     # Define the path to the input file
-    input_file = '../outputAll.txt'
+    input_file = '../TESTNUEVO.txt'
 
     # Read the contents of the file
     with open(input_file, 'r') as file:
@@ -100,9 +103,9 @@ if __name__ == "__main__":
         print(line)
         parts = line.split()
         name = parts[0]
-        model = parts[1]
-        value1 = float(parts[2].replace(':', ''))
-        value2 = float(parts[3])
+        model = parts[2]
+        value1 = float(parts[3].replace(':', ''))
+        value2 = float(parts[4])
 
         if name not in temp_dict:
             temp_dict[name] = {"sayah": [None, None], "kuby": [None, None], "Bias": [None, None], "BiasByGroup": [None, None]}
@@ -127,7 +130,68 @@ if __name__ == "__main__":
     print(df)
 
     # Export the DataFrame to an Excel file
-    output_file = "../test/outputNew.csv"
+    output_file = "../test/outputNewExecutionBias.csv"
     df.to_csv(output_file, index=False, sep=';', decimal=",")
 
     #output_file
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    x = np.array([6, 9, 10, 15, 20, 22, 30, 50, 75])
+
+    sayah = np.array([0, 0, 24.92, 12.50, 19.50,0, 16.77, 0, 1.69])
+    chained = np.array([1.74, 3.21 ,0, 0.30, 2.14, 1.85, 0, 2.85, 3.75])
+
+    plt.plot(x,sayah,label='Sayah',color='red', marker ='o')
+    plt.plot(x,chained,label='Chained',color='blue', marker= 'o')
+    plt.xlabel('p')
+    plt.ylabel('mean dev')
+    plt.legend()
+    plt.show()
+
+    x = np.array([2,5,10])
+
+    sayah = np.array([0.63, 13.60, 20.79])
+    chained = np.array([2.85, 1.42, 0])
+
+    plt.plot(x, sayah, label='Sayah', color='red', marker='o')
+    plt.plot(x, chained, label='Chained', color='blue', marker='o')
+    plt.xlabel('k')
+    plt.ylabel('mean dev')
+    plt.legend()
+    plt.show()
+"""
+if __name__ == "__main__":
+    import csv
+    from collections import defaultdict
+
+    # Initialize dictionaries to store sums and minimums
+    sum_dict = defaultdict(float)
+    min_dict = defaultdict(lambda: float('inf'))
+
+    # Read the data from the txt file
+    with open('outputChained.txt', 'r') as file:
+        for line in file:
+            parts = line.split()
+            name = parts[0]
+            third_column = float(parts[2].rstrip(':'))
+            fourth_column = float(parts[3])
+
+            # Sum the third column values
+            sum_dict[name] += third_column
+
+            # Update the minimum value for the fourth column
+            if fourth_column < min_dict[name]:
+                min_dict[name] = fourth_column
+
+    # Write the results to a CSV file
+    with open('outputChained.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=';')
+        writer.writerow(['Name', 'Sum', 'Min'])
+
+        for name in sum_dict:
+            writer.writerow([name, sum_dict[name], min_dict[name]])
+
+    print("CSV file 'output.csv' created successfully.")

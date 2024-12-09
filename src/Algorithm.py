@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 class Solution:
-    def __init__(self, param_dict, max_of, active_ls3):
+    def __init__(self, param_dict, max_of, use_ls, active_ls3):
         self.instance = param_dict["inst"]
         self.max_of = max_of
         self.sorted_distances = self.instance.sorted_distances.copy()
@@ -22,6 +22,7 @@ class Solution:
         self.coef_bound = 0.75
         self.end_iteration = False
         self.integers_list = []
+        self.use_ls = use_ls
         self.active_ls3 = active_ls3
 
     def generate_random_ordered_integers(self):
@@ -38,10 +39,11 @@ class Solution:
         self.construct_solution(beta_0, beta_1)
         #print("bias",time.time()-start)
         #start2 = time.time()
-        max_ls = 100
-        self.historial.append(self.of)
-        if not self.end_iteration:
-            self.run_exchage_LS(max_ls, self.active_ls3)
+        if self.use_ls:
+            max_ls = 100
+            self.historial.append(self.of)
+            if not self.end_iteration:
+                self.run_exchage_LS(max_ls, self.active_ls3)
         #print("ls",time.time()-start2)
 
         return self.of
@@ -205,23 +207,15 @@ class Solution:
 
             critical_nodes = {}
             critical_found = False
-            for group, list_nodes in self.selected_dict.items():
-                for i in range(self.p - 1):
-                    matrix_i = self.instance.distance[list_nodes[i]]
-                    for j in range(i + 1, self.p):
-                        if matrix_i[list_nodes[j]] == self.of:
-                            critical_nodes.setdefault(list_nodes[i], group)
-                            critical_nodes.setdefault(list_nodes[j], group)
-                            critical_found = True
-                            break
-                    if critical_found:
-                        break
-                if critical_found:
+            for group, data in self.dict_disp_group.items():
+                if data[1] == self.of:
+                    critical_found = True
+                    critical_nodes.setdefault(data[0][0], group)
+                    critical_nodes.setdefault(data[0][1], group)
                     break
 
             for c_node, group in critical_nodes.items():
                 improved = False
-
                 for num1 in range(n):
                     v = self.integers_list[num1]
                     if v == c_node:
@@ -245,18 +239,37 @@ class Solution:
                                     improved = True
                                     break
                                 else:
-
                                     if active_ls3:
                                         for num2 in range(n):
                                             v2 = self.integers_list[num2]
                                             if v2 != c_node and v2 != v:
-                                                if v2 in self.selected_list:
-                                                    continue
-                                                else:
-                                                    if self.distance_to(v2, v_group, [v])[1] > self.of:
+                                                if self.distance_to(v2, v_group, [v])[1] > self.of:
+                                                    if self.groups > 2 and v2 in self.selected_list:
+                                                        v2_group = self.find_group_by_value(v2)
+                                                        if v2_group == group or v2_group == v_group:
+                                                            continue
+                                                        else:
+                                                            if self.distance_to(c_node, v2_group, [v2])[1] > self.of:
+                                                                self.selected_dict[group].remove(c_node)
+                                                                self.selected_dict[v_group].remove(v)
+                                                                self.selected_dict[v2_group].remove(v2)
+                                                                self.selected_list.remove(c_node)
+                                                                self.selected_list.remove(v)
+                                                                self.selected_list.remove(v2)
+                                                                self.add(v, group)
+                                                                self.update_of(0, v, 0, group, recalculate=True)
+                                                                self.add(v2, v_group)
+                                                                self.update_of(0, v2, 0, v_group, recalculate=True)
+                                                                self.add(c_node, v2_group)
+                                                                self.update_of(0, c_node, 0, v2_group, recalculate=True)
+                                                                self.historial.append(self.of)
+                                                                improved = True
+                                                                break
+                                                    elif v2 not in self.selected_list:
                                                         self.selected_dict[group].remove(c_node)
                                                         self.selected_dict[v_group].remove(v)
                                                         self.selected_list.remove(c_node)
+                                                        self.selected_list.remove(v)
                                                         self.add(v, group)
                                                         self.update_of(0, v, 0, group, recalculate=True)
                                                         self.add(v2, v_group)

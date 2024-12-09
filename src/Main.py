@@ -25,9 +25,11 @@ def prepare_instance(t):
 
 if __name__ == "__main__":
 
-    tests = read_test("run_test.txt")
+    tests = read_test("run_60.txt")
+    use_ls = True
     use_ls3 = True
-    verbose = True
+    use_PR = True
+    verbose = False
     algorithms = ["Bias"]
     for alg in algorithms:
         algorithm = alg
@@ -45,9 +47,9 @@ if __name__ == "__main__":
             while time.time() - start < t.max_time:
                 it += 1
                 if algorithm == "BiasByGroup":
-                    sol = Solution_Group(params_dict, max_of, use_ls3)
+                    sol = Solution_Group(params_dict, max_of, use_ls, use_ls3)
                 else:
-                    sol = Solution(params_dict, max_of, use_ls3)
+                    sol = Solution(params_dict, max_of, use_ls, use_ls3)
                 beta_0_it = np.random.triangular(0, beta_0, 1, 1)[0]
                 beta_1_it = np.random.triangular(0, beta_1, 1, 1)[0]
                 of_it = sol.run_algorithm(beta_0=beta_0_it, beta_1=beta_1_it)
@@ -59,16 +61,42 @@ if __name__ == "__main__":
                     beta_1 = beta_1_it
                     if verbose:
                         print(it, final_sol.historial, beta_0, beta_1, of_it)
-                    pr_candidates.append(final_sol.selected_dict)
+                if use_PR and 0.8 * of < of_it:
+                    pr_candidates.append({"solution":sol.selected_dict,"selected_list": sol.selected_list, "min_of": sol.of})
+
 
             if verbose:
                 print("Iterations: ", it)
                 print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
                   final_sol.selected_dict)
-            final_sol.save_dict_to_txt('TESTNUEVO.txt', of, t.instName, algorithm, t.max_time, t.seed)
-            print((pr_candidates))
-            pr = PathRelinking(params_dict,pr_candidates)
-            pr.run_algorithm()
+            final_sol.save_dict_to_txt('pruebas.txt', of, t.instName, algorithm, t.max_time, t.seed)
+
+
+            if use_PR:
+                sorted_solutions = sorted(pr_candidates, key=lambda x: x['min_of'], reverse=True)
+                top_solutions = []
+                used_nodes = set()
+                m = sorted_solutions[0]["min_of"] + 1
+
+                for sol in sorted_solutions:
+                    if len(top_solutions) >= 10:
+                        break
+
+                    include = True
+                    for ts in top_solutions:
+                        if set(sol['selected_list']) == set(ts['selected_list']):
+                        #if sol["min_of"] >= m or set(sol['selected_list']) == set(ts['selected_list']):
+                            include = False
+                            break
+                    if include:
+                        top_solutions.append(sol)
+                        m = sol["min_of"]
+
+                selected_solutions = [sol["solution"] for sol in top_solutions]
+                pr = PathRelinking(params_dict, selected_solutions)
+                final_of = pr.run_algorithm()
+                print(final_of)
+                final_sol.save_dict_to_txt('pruebas.txt', final_of, t.instName, algorithm + " PR", t.max_time, t.seed)
 
 """
 if __name__ == "__main__":

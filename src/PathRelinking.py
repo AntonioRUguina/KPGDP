@@ -15,6 +15,7 @@ class PathRelinking:
 
     def run_algorithm(self):
         len_set = len(self.set_solutions)
+        list_of = []
 
         index = 0
 
@@ -51,9 +52,6 @@ class PathRelinking:
                                         reward += distance2 - dict_of[group_candidate]
 
                                     reward_dict[(group, node, candidate, already_in_solution, group_candidate)] = reward
-                        else:
-                            stop = True
-                            break
 
                     if not reward_dict:
                         stop = True
@@ -74,7 +72,31 @@ class PathRelinking:
                     pr_dict.append({"index":index, "sum_of_groups": sum(dict_of.values()), "min_of": min(dict_of.values()), "solution": copy.deepcopy(sol1)})
                     nodes_sol1, common_elements = self.distribute_elements(sol1, sol2)
 
+                #Take the best in terms of sum of dispersion groups
                 pr_dict.sort(key=lambda x: x["sum_of_groups"], reverse = True)
+                best_max_sum = pr_dict.pop(0)
+
+                self.selected_dict = best_max_sum["solution"]
+                combined_list = []
+                for key in best_max_sum['solution']:
+                    combined_list.extend(best_max_sum['solution'][key])
+                self.selected_list = combined_list
+                self.of = best_max_sum["min_of"]
+                self.dict_disp_group = self.scan_of(best_max_sum['solution'])
+                self.historial = []
+
+                list_of.append(self.of)
+                print("pre_ls",self.of)
+
+
+                self.run_exchage_LS(100,True)
+
+                list_of.append(self.of)
+                print("post_ls",self.of)
+
+                # Take the best in terms of min of dispersion groups
+
+                pr_dict.sort(key=lambda x: x["min_of"], reverse=True)
                 best_max = pr_dict.pop(0)
 
                 self.selected_dict = best_max["solution"]
@@ -86,11 +108,17 @@ class PathRelinking:
                 self.dict_disp_group = self.scan_of(best_max['solution'])
                 self.historial = []
 
-                self.run_exchage_LS(100,True)
+                list_of.append(self.of)
+                print("pre_ls", self.of)
 
-                print(self.historial)
+                self.run_exchage_LS(100, True)
 
-        return pr_dict
+                list_of.append(self.of)
+                print("post_ls", self.of)
+
+
+
+        return max(list_of)
 
     def find_common_elements(self, list1, list2):
         return len(set(list1) & set(list2))
@@ -111,6 +139,28 @@ class PathRelinking:
                 # Update the best match if the current pair has more common elements
                 if common_elements > max_common and key2 not in matches.values():
                     max_common = common_elements
+                    best_match_key = key2
+
+            # Store the best match for the current list from the first dictionary
+            matches[key1] = best_match_key
+        self.matches = matches
+
+    def match_groups_min(self, sol1, sol2):
+        # Create a result dictionary to store the matches
+        matches = {}
+
+        # Iterate over each list in the first dictionary
+        for key1, list1 in sol1.items():
+            min_common = 1000
+            best_match_key = None
+
+            # Compare with each list in the second dictionary
+            for key2, list2 in sol2.items():
+                common_elements = self.find_common_elements(list1, list2)
+
+                # Update the best match if the current pair has more common elements
+                if common_elements < min_common and key2 not in matches.values():
+                    min_common = common_elements
                     best_match_key = key2
 
             # Store the best match for the current list from the first dictionary
