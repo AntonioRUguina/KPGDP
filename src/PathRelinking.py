@@ -26,30 +26,39 @@ class PathRelinking:
                 sol1 = self.set_solutions[indx1]
                 sol2 = self.set_solutions[indx2]
 
-                self.match_groups(sol1, sol2)
+                self.match_groups_min(sol1, sol2)
                 nodes_sol1, common_elements = self.distribute_elements(sol1, sol2)
                 dict_of = self.scan_of(sol1)
 
                 stop = False
                 while not stop:
                     reward_dict = {}
-
+                    dict_of = self.scan_of(sol1)
                     for group, nodes in sol1.items():
                         candidates = [i for i in sol2[self.matches[group]] if i not in common_elements[group]]
 
                         if candidates:
                             for node in (i for i in nodes if i not in common_elements[group]):
+                                distance_node = self.distance_to_solution(node, group, sol1, exclude_list=[node])
                                 for candidate in candidates:
                                     already_in_solution = candidate in nodes_sol1
                                     distance = self.distance_to_solution(candidate, group, sol1, exclude_list=[node])
-                                    reward = distance - dict_of[group]
+                                    reward = distance - distance_node
+
+                                    if (dict_of[group] ==min(dict_of.values())):
+                                        reward = reward * 2
 
                                     group_candidate = None
                                     if already_in_solution:
                                         group_candidate = self.find_group(candidate, sol1)
+
+                                        distance_candidate  = self.distance_to_solution(node, group_candidate, sol1,
+                                                                                                       exclude_list=[candidate])
                                         distance2 = self.distance_to_solution(node, group_candidate, sol1,
                                                                      exclude_list=[candidate])
-                                        reward += distance2 - dict_of[group_candidate]
+                                        reward += distance2 - distance_candidate
+                                        if (dict_of[group_candidate] == min(dict_of.values())):
+                                            reward += distance2 - distance_candidate
 
                                     reward_dict[(group, node, candidate, already_in_solution, group_candidate)] = reward
 
@@ -86,13 +95,13 @@ class PathRelinking:
                 self.historial = []
 
                 list_of.append(self.of)
-                print("pre_ls",self.of)
+                print("pre_ls sum",self.of)
 
 
                 self.run_exchage_LS(100,True)
 
                 list_of.append(self.of)
-                print("post_ls",self.of)
+                print("post_ls sum",self.of)
 
                 # Take the best in terms of min of dispersion groups
 
@@ -109,12 +118,12 @@ class PathRelinking:
                 self.historial = []
 
                 list_of.append(self.of)
-                print("pre_ls", self.of)
+                print("pre_ls maxmin", self.of)
 
                 self.run_exchage_LS(100, True)
 
                 list_of.append(self.of)
-                print("post_ls", self.of)
+                print("post_ls maxmin", self.of)
 
 
 

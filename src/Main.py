@@ -5,8 +5,8 @@ import random
 from AlgorithmByGroups import Solution_Group
 from Algorithm import Solution
 import time
-from Gurobi import Solution_Gurobi
 from PathRelinking import PathRelinking
+from GurobiFast import Solution_Gurobi
 def prepare_instance(t):
     path = build_full_path("\\Users\\Antor\\Desktop\\Git\\kpGDPAlgorithm\\KPGDP\\src\\NewInstances\\" + t.instName)
     inst = Instance(path)
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     use_ls = True
     use_ls3 = True
     use_PR = True
-    verbose = False
+    verbose = True
     algorithms = ["Bias"]
     for alg in algorithms:
         algorithm = alg
@@ -61,6 +61,8 @@ if __name__ == "__main__":
                     beta_1 = beta_1_it
                     if verbose:
                         print(it, final_sol.historial, beta_0, beta_1, of_it)
+                        print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
+                              final_sol.selected_dict)
                 if use_PR and 0.8 * of < of_it:
                     pr_candidates.append({"solution":sol.selected_dict,"selected_list": sol.selected_list, "min_of": sol.of})
 
@@ -78,6 +80,7 @@ if __name__ == "__main__":
                 used_nodes = set()
                 m = sorted_solutions[0]["min_of"] + 1
 
+
                 for sol in sorted_solutions:
                     if len(top_solutions) >= 10:
                         break
@@ -85,18 +88,36 @@ if __name__ == "__main__":
                     include = True
                     for ts in top_solutions:
                         if set(sol['selected_list']) == set(ts['selected_list']):
-                        #if sol["min_of"] >= m or set(sol['selected_list']) == set(ts['selected_list']):
+                            include = False
+                            break
+                        elif len(set(ts['selected_list'])) + 3 > len(set(ts['selected_list'] + ts['selected_list'])):
                             include = False
                             break
                     if include:
                         top_solutions.append(sol)
                         m = sol["min_of"]
 
-                selected_solutions = [sol["solution"] for sol in top_solutions]
-                pr = PathRelinking(params_dict, selected_solutions)
-                final_of = pr.run_algorithm()
-                print(final_of)
-                final_sol.save_dict_to_txt('pruebas.txt', final_of, t.instName, algorithm + " PR", t.max_time, t.seed)
+                params_dict = prepare_instance(t)
+                for idx1 in range(len(top_solutions)):
+                    for idx2 in range(len(top_solutions)):
+                        if idx1 < idx2:
+                            improved = True
+                            while improved:
+                                sol = Solution_Gurobi(params_dict, t.max_time,top_solutions[idx1]["selected_list"], top_solutions[idx2]["selected_list"], of)
+                                of_pr = sol.run_algorithm()
+                                if of_pr > of:
+                                    of = of_pr
+                                    print("Improved to: ", of)
+                                    improved = True
+                                else:
+                                    improved = False
+                print(of)
+                # print(top_solutions)
+                # selected_solutions = [sol["solution"] for sol in top_solutions]
+                # pr = PathRelinking(params_dict, selected_solutions)
+                # final_of = pr.run_algorithm()
+                # print(final_of)
+                # final_sol.save_dict_to_txt('pruebas.txt', final_of, t.instName, algorithm + " PR", t.max_time, t.seed)
 
 """
 if __name__ == "__main__":

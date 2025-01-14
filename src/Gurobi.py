@@ -33,7 +33,7 @@ class Solution_Gurobi:
         """
     def run_algorithm(self):
         #Kuby
-        self.construct_solution_kgpdp(k=self.groups, p=self.p, time_max=self.max_time)
+        # self.construct_solution_kgpdp(k=self.groups, p=self.p, time_max=self.max_time)
         #Sayah
         self.construct_solution_kgpdp_compact(k=self.groups, p=self.p, time_max=self.max_time)
         #self.construct_solution_kgpdp_sum(k=self.groups, p= self.p, time_max = 3600)
@@ -209,6 +209,13 @@ class Solution_Gurobi:
             model.C4.add(expr= u[m-1] <= u[m])
 
         print("c4 Built")
+
+        # model.C5 = pyo.ConstraintList()
+        # for ki in range(k-1):
+        #     i_sum = sum(i*X[i, ki] for i in range(n))
+        #     i1_sum = sum(i*X[i, ki+1] for i in range(n))
+        #     model.C5.add(expr= i_sum <= i1_sum)
+        # print("c5 Built")
 
         telescopic_sum = 0
         for m in range(0, len(sorted_distances)-1):
