@@ -7,7 +7,7 @@ Created on Fri Mar  3 09:36:53 2023
 
 
 from Main import read_test, prepare_instance
-from GurobiFast import Solution_Gurobi
+from Gurobi import Solution_Gurobi
 import pandas as pd
 
 
@@ -19,11 +19,11 @@ if __name__ == "__main__":
 
     for t in tests:
         params_dict = prepare_instance(t)
-        sol = Solution_Gurobi(params_dict, t.max_time, [] , [])
+        sol = Solution_Gurobi(params_dict, t.max_time)
         sol.run_algorithm()
         # sol.run_algorithm_chained()
 
-        print(sol.of, sol.n_selected,sol.selected_list, sol.selected_dict)
+        # print(sol.of, sol.n_selected,sol.selected_list, sol.selected_dict)
 
         #write_data_dinamic(sol, t, "output.txt")
     #sys.exit()

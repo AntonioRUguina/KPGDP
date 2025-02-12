@@ -2,6 +2,8 @@ import numpy as np
 import pyomo.environ as pyo
 from pyomo.environ import *
 from pyomo.opt import SolverFactory
+import time
+import multiprocessing
 class Solution_Gurobi:
     def __init__(self, param_dict, max_time):
         self.instance = param_dict["inst"]
@@ -34,10 +36,53 @@ class Solution_Gurobi:
     def run_algorithm(self):
         #Kuby
         # self.construct_solution_kgpdp(k=self.groups, p=self.p, time_max=self.max_time)
-        #Sayah
-        self.construct_solution_kgpdp_compact(k=self.groups, p=self.p, time_max=self.max_time)
+        # #Sayah
+        # self.construct_solution_kgpdp_compact(k=self.groups, p=self.p, time_max=self.max_time)
+        #Chained
         #self.construct_solution_kgpdp_sum(k=self.groups, p= self.p, time_max = 3600)
+        #F3 Step By Step
+        # bound = 0.1
+        # start = time.time()
+        # improved = True
+        #
+        # while improved:
+        #     improved = False
+        #     current_time = time.time() - start
+        #     if (self.max_time - current_time > 1):
+        #         of = self.construct_solution_kgpdp_packing(k=self.groups, p=self.p, time_max=self.max_time - current_time, bound=bound)
+        #         if of > bound:
+        #             improved = True
+        #             bound = of
+        # self.save_dict_to_txt('outputPacking.txt', bound, self.instance_name, "Chained", time.time() - start)
+        # #print(self.selected_list, self.of)
 
+        sorted_distances = list(dict.fromkeys([i.distance for i in self.sorted_distances]))
+        down_index = len(sorted_distances)
+        up_index = 0
+        up_value = 0
+        start = time.time()
+        loop = True
+
+        while loop:
+            improved = False
+            current_time = time.time() - start
+            if (self.max_time - current_time > 1):
+                target_index = int(up_index + (down_index - up_index)/2)
+                if target_index == up_index:
+                    loop = False
+                    break
+                bound = sorted_distances[target_index]
+                print(up_index,down_index, target_index, bound)
+                of = self.construct_solution_kgpdp_packing(k=self.groups, p=self.p, time_max=self.max_time - current_time, bound=bound)
+                if of > 0:
+                    bound = of
+                    best_of = of
+                    down_index = target_index
+                else:
+                    up_index = target_index
+
+
+        self.save_dict_to_txt('outputPackingBinary.txt', best_of, self.instance_name, "Chained", time.time() - start)
         #print(self.selected_list, self.of)
 
         return self.of
@@ -324,6 +369,83 @@ class Solution_Gurobi:
 
         return selected_list
 
+    def find_last_more_than_bound(self, sorted_list, bound):
+        for i in range(len(sorted_list)):
+            if sorted_list[i] <= bound:
+                return sorted_list[i-1]
+    def construct_solution_kgpdp_packing(self, k, p, time_max, bound):
+        #pdp
+        instance = self.instance
+        n = instance.n
+        model = pyo.ConcreteModel()
+
+
+        sorted_distances = list(dict.fromkeys([i.distance for i in self.sorted_distances]))
+        # DESCOMENTAR PARA STEP BY STEP
+        # bound = self.find_last_more_than_bound(sorted_distances, bound)
+        sorted_distances.reverse()
+        Dm = np.max(sorted_distances)
+
+        model.i = RangeSet(0, n)
+        model.k = RangeSet(0, k)
+
+        model.X = pyo.Var(model.i, model.k, within=Binary)
+
+        X = model.X
+
+
+        model.C1 = pyo.ConstraintList()
+        for ki in range(k):
+            x_sum = sum([X[i, ki] for i in range(n)])
+            model.C1.add(expr= x_sum == p)
+        print("c1 Built")
+
+        model.C2 = pyo.ConstraintList()
+
+        for i in range(n):
+            x_sum = sum([X[i, ki] for ki in range(k)])
+            model.C2.add(expr=x_sum <= 1)
+        print("c2 Built")
+
+        model.C3 = pyo.ConstraintList()
+        for i in range(n-1):
+            for j in range(i+1,n):
+
+                index = sorted_distances.index(self.distance[i, j])
+                if self.distance[i, j] < bound:
+                    for ki in range(k):
+                        model.C3.add(expr= X[i, ki] + X[j, ki] <= 1)
+        print("c3 Built")
+        model.obj = pyo.Objective(expr=1 , sense=maximize)
+
+        print("Model Built")
+        opt = SolverFactory('gurobi')
+
+        opt.options['TimeLimit'] = time_max
+        # If there are memory problems, then reduce the Threads
+        #opt.options['Threads'] = 1
+        try:
+            results = opt.solve(model)
+            if results.solver.termination_condition != 'infeasible':
+                min_distance = 10000000
+                for ki in range(k):
+                    for i in range(n - 1):
+                        if pyo.value(X[i, ki]) > 0.5:
+                            for j in range(i + 1, n):
+                                if pyo.value(X[j, ki]) > 0.5:
+                                    distance = self.distance[i, j]
+                                    if distance < min_distance:
+                                        min_distance = distance
+                print("Current Sol: ", min_distance)
+                solution = min_distance
+                #print('X:', X_value)
+                return solution
+            else:
+                print("Infeasible")
+                return 0
+        except Exception as e:
+            return 0
+            # print(e)
 
     """
     def construct_solution_kgpdp_sum(self, k, p,time_max):

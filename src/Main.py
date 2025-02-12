@@ -24,8 +24,8 @@ if __name__ == "__main__":
     tests = read_test("run_60.txt")
     use_ls = True
     use_ls3 = True
-    use_PR = True
-    verbose = False
+    use_MRM = False
+    verbose = True
     algorithms = ["Bias"]
     for alg in algorithms:
         algorithm = alg
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                         print(it, final_sol.historial, beta_0, beta_1, of_it)
                         print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
                               final_sol.selected_dict)
-                if use_PR and 0.8 * of < of_it:
+                if use_MRM and 0.5 * of < of_it:
                     pr_candidates.append({"solution":sol.selected_dict,"selected_list": sol.selected_list, "min_of": sol.of})
 
 
@@ -67,10 +67,11 @@ if __name__ == "__main__":
                 print("Iterations: ", it)
                 print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
                   final_sol.selected_dict)
-            # final_sol.save_dict_to_txt('pruebas.txt', of, t.instName, algorithm, t.max_time, t.seed)
+
+            final_sol.save_dict_to_txt('BIASGRASPNOALPHA.txt', of, t.instName, algorithm, t.max_time, t.seed)
 
 
-            if use_PR:
+            if use_MRM:
                 sorted_solutions = sorted(pr_candidates, key=lambda x: x['min_of'], reverse=True)
                 top_solutions = []
                 used_nodes = set()
@@ -95,44 +96,44 @@ if __name__ == "__main__":
 
                 params_dict = prepare_instance(t)
 
-                # max_pr_time = 120
-                # start_pr = time.time()
-                # improved = True
-                #
-                # while improved:
-                #     current_time = time.time() - start_pr
-                #     if (max_pr_time - current_time > 1):
-                #         sol = Solution_Gurobi(params_dict, round(max_pr_time-current_time),
-                #                               [i["selected_list"] for i in top_solutions], of)
-                #         of_pr = sol.run_algorithm()
-                #         if of_pr > of:
-                #             improved = True
-                #             print(of_pr)
-                #             of = of_pr
-                #         else:
-                #             improved = False
-                #     else:
-                #         break
-
                 max_pr_time = 120
                 start_pr = time.time()
-                for idx1 in range(len(top_solutions)):
-                    for idx2 in range(len(top_solutions)):
-                        if idx1 < idx2:
+                improved = True
+
+                while improved:
+                    current_time = time.time() - start_pr
+                    if (max_pr_time - current_time > 1):
+                        sol = Solution_Gurobi(params_dict, round(max_pr_time-current_time),
+                                              [i["selected_list"] for i in top_solutions], of)
+                        of_pr = sol.run_algorithm()
+                        if of_pr > of:
                             improved = True
-                            while improved:
-                                current_time = time.time() - start_pr
-                                if ( max_pr_time - current_time > 1 ):
-                                    print("Current Time: ", current_time)
-                                    sol = Solution_Gurobi(params_dict, round(min(max_pr_time-current_time, 30)), [top_solutions[idx1]["selected_list"], top_solutions[idx2]["selected_list"]], of)
-                                    of_pr = sol.run_algorithm()
-                                    if of_pr > of:
-                                        of = of_pr
-                                        print("Improved to: ", of)
-                                        improved = True
-                                    else:
-                                        improved = False
-                                else:
-                                    break
+                            print(of_pr)
+                            of = of_pr
+                        else:
+                            improved = False
+                    else:
+                        break
+
+                # max_pr_time = 120
+                # start_pr = time.time()
+                # for idx1 in range(len(top_solutions)):
+                #     for idx2 in range(len(top_solutions)):
+                #         if idx1 < idx2:
+                #             improved = True
+                #             while improved:
+                #                 current_time = time.time() - start_pr
+                #                 if ( max_pr_time - current_time > 1 ):
+                #                     print("Current Time: ", current_time)
+                #                     sol = Solution_Gurobi(params_dict, round(min(max_pr_time-current_time, 30)), [top_solutions[idx1]["selected_list"], top_solutions[idx2]["selected_list"]], of)
+                #                     of_pr = sol.run_algorithm_2()
+                #                     if of_pr > of:
+                #                         of = of_pr
+                #                         print("Improved to: ", of)
+                #                         improved = True
+                #                     else:
+                #                         improved = False
+                #                 else:
+                #                     break
                 print(of)
-                final_sol.save_dict_to_txt('PR.txt', of, t.instName, "PR", min(max_pr_time, round(time.time() - start_pr)), t.seed)
+                final_sol.save_dict_to_txt('PR10.txt', of, t.instName, "PR5Pairs", min(max_pr_time, round(time.time() - start_pr)), t.seed)
