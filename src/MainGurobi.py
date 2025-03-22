@@ -7,7 +7,7 @@ Created on Fri Mar  3 09:36:53 2023
 
 
 from Main import read_test, prepare_instance
-from Gurobi import Solution_Gurobi
+from Gurobi2 import Solution_Gurobi
 import pandas as pd
 
 
