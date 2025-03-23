@@ -7,9 +7,7 @@ Created on Fri Mar  3 09:36:53 2023
 
 
 from Main import read_test, prepare_instance
-from Gurobi2 import Solution_Gurobi
-import pandas as pd
-
+from MathModels import Solution_Gurobi
 
 
 if __name__ == "__main__":
@@ -21,12 +19,8 @@ if __name__ == "__main__":
         params_dict = prepare_instance(t)
         sol = Solution_Gurobi(params_dict, t.max_time)
         sol.run_algorithm()
-        # sol.run_algorithm_chained()
+        sol.run_algorithm_chained()
 
-        # print(sol.of, sol.n_selected,sol.selected_list, sol.selected_dict)
-
-        #write_data_dinamic(sol, t, "output.txt")
-    #sys.exit()
 
 
 

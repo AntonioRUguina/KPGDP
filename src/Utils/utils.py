@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     # Input data
     # Define the path to the input file
-    input_file = '../outputPacking.txt'
+    input_file = '../outputPackingSbS.txt'
 
     # Read the contents of the file
     with open(input_file, 'r') as file:
