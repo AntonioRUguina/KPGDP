@@ -50,7 +50,7 @@ if __name__ == "__main__":
     import os
 
     # Define the source directory and the output file
-    source_directory = "\\Users\\Antor\\Desktop\\Git\\kpGDPAlgorithm\\KPGDP\\src\\NewInstances\\"
+    source_directory = "\\Users\\Antor\\Desktop\\Git\\kpGDPAlgorithm\\KPGDP\\src\\Instances\\"
     output_file = "../test/run_60.txt"
 
     # Get a list of all .txt files in the source directory

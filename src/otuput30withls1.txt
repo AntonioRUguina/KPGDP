@@ -1,0 +1,70 @@
+GKD-b_41_n150_2_30.txt 7357 Bias 60: 166.3 
+GKD-b_41_n150_5_30.txt 7357 Bias 60: 183.6 
+GKD-c_01_n500_2_30.txt 7357 Bias 60: 9.0 
+GKD-c_01_n500_5_30.txt 7357 Bias 60: 10.6 
+GKD-c_01_n500_10_30.txt 7357 Bias 60: 12.0 
+MDG-b_01_n500_2_30.txt 7357 Bias 60: 45.6 
+MDG-b_01_n500_5_30.txt 7357 Bias 60: 140.1 
+MDG-b_01_n500_10_30.txt 7357 Bias 60: 308.7 
+RUMG_a_n500_2_30.txt 7357 Bias 60: 10.0 
+RUMG_a_n500_5_30.txt 7357 Bias 60: 15.0 
+RUMG_a_n500_10_30.txt 7357 Bias 60: 21.0 
+GKD-b_41_n150_2_30.txt 7357 BiasByGroup 60: 166.0
+ GKD-b_41_n150_5_30.txt 7357 BiasByGroup 60: 183.8
+ GKD-c_01_n500_2_30.txt 7357 BiasByGroup 60: 9.0
+ GKD-c_01_n500_5_30.txt 7357 BiasByGroup 60: 10.7
+ GKD-c_01_n500_10_30.txt 7357 BiasByGroup 60: 12.1
+ MDG-b_01_n500_2_30.txt 7357 BiasByGroup 60: 46.3
+ MDG-b_01_n500_5_30.txt 7357 BiasByGroup 60: 146.4
+ MDG-b_01_n500_10_30.txt 7357 BiasByGroup 60: 315.0
+ RUMG_a_n500_2_30.txt 7357 BiasByGroup 60: 10.0
+ RUMG_a_n500_5_30.txt 7357 BiasByGroup 60: 15.0
+ RUMG_a_n500_10_30.txt 7357 BiasByGroup 60: 21.0
+
+GKD-b_41_n150_2_30.txt 7357 Bias 60: 166.3 
+GKD-b_41_n150_5_30.txt 7357 Bias 60: 184.9 
+GKD-c_01_n500_2_30.txt 7357 Bias 60: 9.1 
+GKD-c_01_n500_5_30.txt 7357 Bias 60: 10.8 
+GKD-c_01_n500_10_30.txt 7357 Bias 60: 12.2 
+MDG-b_01_n500_2_30.txt 7357 Bias 60: 46.8 
+MDG-b_01_n500_5_30.txt 7357 Bias 60: 148.2 
+MDG-b_01_n500_10_30.txt 7357 Bias 60: 315.1 
+RUMG_a_n500_2_30.txt 7357 Bias 60: 10.0 
+RUMG_a_n500_5_30.txt 7357 Bias 60: 16.0 
+RUMG_a_n500_10_30.txt 7357 Bias 60: 22.0 
+GKD-b_41_n150_2_30.txt 7357 BiasByGroup 60: 166.0
+ GKD-b_41_n150_5_30.txt 7357 BiasByGroup 60: 184.9
+ GKD-c_01_n500_2_30.txt 7357 BiasByGroup 60: 9.1
+ GKD-c_01_n500_5_30.txt 7357 BiasByGroup 60: 10.9
+ GKD-c_01_n500_10_30.txt 7357 BiasByGroup 60: 12.3
+ MDG-b_01_n500_2_30.txt 7357 BiasByGroup 60: 47.7
+ MDG-b_01_n500_5_30.txt 7357 BiasByGroup 60: 148.3
+ MDG-b_01_n500_10_30.txt 7357 BiasByGroup 60: 319.8
+ RUMG_a_n500_2_30.txt 7357 BiasByGroup 60: 10.0
+ RUMG_a_n500_5_30.txt 7357 BiasByGroup 60: 16.0
+ RUMG_a_n500_10_30.txt 7357 BiasByGroup 60: 22.0
+
+ 
+ GKD-b_41_n150_2_30.txt 7357 Bias 60: 163.5 
+GKD-b_41_n150_5_30.txt 7357 Bias 60: 181.7 
+GKD-c_01_n500_2_30.txt 7357 Bias 60: 8.9 
+GKD-c_01_n500_5_30.txt 7357 Bias 60: 10.5 
+GKD-c_01_n500_10_30.txt 7357 Bias 60: 11.7 
+MDG-b_01_n500_2_30.txt 7357 Bias 60: 43.4 
+MDG-b_01_n500_5_30.txt 7357 Bias 60: 131.2 
+MDG-b_01_n500_10_30.txt 7357 Bias 60: 290.8 
+RUMG_a_n500_2_30.txt 7357 Bias 60: 9.0 
+RUMG_a_n500_5_30.txt 7357 Bias 60: 15.0 
+RUMG_a_n500_10_30.txt 7357 Bias 60: 20.0 
+GKD-b_41_n150_2_30.txt 7357 BiasByGroup 60: 164.5
+ GKD-b_41_n150_5_30.txt 7357 BiasByGroup 60: 180.8
+ GKD-c_01_n500_2_30.txt 7357 BiasByGroup 60: 8.9
+ GKD-c_01_n500_5_30.txt 7357 BiasByGroup 60: 10.5
+ GKD-c_01_n500_10_30.txt 7357 BiasByGroup 60: 11.7
+ MDG-b_01_n500_2_30.txt 7357 BiasByGroup 60: 43.0
+ MDG-b_01_n500_5_30.txt 7357 BiasByGroup 60: 135.1
+ MDG-b_01_n500_10_30.txt 7357 BiasByGroup 60: 283.8
+ RUMG_a_n500_2_30.txt 7357 BiasByGroup 60: 9.0
+ RUMG_a_n500_5_30.txt 7357 BiasByGroup 60: 15.0
+ RUMG_a_n500_10_30.txt 7357 BiasByGroup 60: 20.0
+ 
