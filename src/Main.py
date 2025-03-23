@@ -5,7 +5,7 @@ import random
 from AlgorithmByGroups import Solution_Group
 from Algorithm import Solution
 import time
-from GurobiFast import Solution_Gurobi
+from PackingFast import Solution_Gurobi
 def prepare_instance(t):
     path = build_full_path("\\Users\\Antor\\Desktop\\Git\\kpGDPAlgorithm\\KPGDP\\src\\Instances\\" + t.instName)
     inst = Instance(path)
@@ -68,7 +68,7 @@ if __name__ == "__main__":
                 print(final_sol.of, final_sol.dict_disp_group, final_sol.n_selected, final_sol.selected_list,
                   final_sol.selected_dict)
 
-            final_sol.save_dict_to_txt('BIASGRASP.txt', of, t.instName, algorithm, t.max_time, t.seed)
+            final_sol.save_dict_to_txt('output/BIASGRASP.txt', of, t.instName, algorithm, t.max_time, t.seed)
 
 
             if use_MRM:
@@ -118,4 +118,4 @@ if __name__ == "__main__":
                         break
 
 
-                final_sol.save_dict_to_txt('PR10.txt', of, t.instName, "PR10Pairs", min(max_pr_time, round(time.time() - start_pr)), t.seed)
+                final_sol.save_dict_to_txt('output/PR10.txt', of, t.instName, "PR10Pairs", min(max_pr_time, round(time.time() - start_pr)), t.seed)

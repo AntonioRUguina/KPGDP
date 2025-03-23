@@ -52,7 +52,7 @@ class Solution_Gurobi:
                 if of > bound:
                     improved = True
                     bound = of
-        self.save_dict_to_txt('outputPackingSbS.txt', bound, self.instance_name, "PackingSbS", time.time() - start)
+        self.save_dict_to_txt('output/outputPackingSbS.txt', bound, self.instance_name, "PackingSbS", time.time() - start)
 
         #F3 Binary
         sorted_distances = list(dict.fromkeys([i.distance for i in self.sorted_distances]))
@@ -81,7 +81,7 @@ class Solution_Gurobi:
                 break
 
 
-        self.save_dict_to_txt('outputPackingBinary.txt', best_of, self.instance_name, "PakingBinary", time.time() - start)
+        self.save_dict_to_txt('output/outputPackingBinary.txt', best_of, self.instance_name, "PakingBinary", time.time() - start)
 
         return self.of
 
@@ -181,7 +181,7 @@ class Solution_Gurobi:
         d_value = pyo.value(d)
 
         time_value = self.extract_time_from_string(str(results["Solver"]))
-        self.save_dict_to_txt('output.txt', d_value, self.instance_name,"kuby", time_value)
+        self.save_dict_to_txt('output/outputModels.txt', d_value, self.instance_name, "kuby", time_value)
 
 
         solution_dict = {k: [] for k in range(0, k)}
@@ -252,7 +252,7 @@ class Solution_Gurobi:
             if pyo.value(u[m]) > 0:
                 solution.append(sorted_distances[m])
                 time_value = self.extract_time_from_string(str(results["Solver"]))
-                self.save_dict_to_txt('output.txt', sorted_distances[m], self.instance_name, "sayah", time_value)
+                self.save_dict_to_txt('output/outputModels.txt', sorted_distances[m], self.instance_name, "sayah", time_value)
                 break
 
 
@@ -307,7 +307,7 @@ class Solution_Gurobi:
                 solution.append(sorted_distances[m])
                 print(solution)
                 time_value = self.extract_time_from_string(str(results["Solver"]))
-                self.save_dict_to_txt('outputChained.txt', sorted_distances[m], self.instance_name, "Chained", time_value)
+                self.save_dict_to_txt('output/outputChained.txt', sorted_distances[m], self.instance_name, "Chained", time_value)
                 break
 
         selected_list = [i for i in range(len(self.distance)) if pyo.value(X[i]) > 0]
