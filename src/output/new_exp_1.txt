@@ -42,5 +42,3 @@ GKD-b_41_n150_2_20.txt 7357 BiasByGroup 60: 174.7
  RUMG_a_n500_5_30.txt 7357 BiasByGroup 60: 15.0
  RUMG_a_n500_10_20.txt 7357 BiasByGroup 60: 26.0
  RUMG_a_n500_10_30.txt 7357 BiasByGroup 60: 20.0
-
-MDG-b_01_n500_5_20.txt 7357 Bias 60: 247.3 
