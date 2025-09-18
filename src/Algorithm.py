@@ -84,15 +84,17 @@ class Solution:
         self.selected_dict[k].append(v)
         self.selected_list.append(v)
         self.n_selected[k] += 1
-        if self.n_selected[k] == self.p - 1:
+        if self.n_selected[k] == self.p[k] - 1:
             self.group_last_selection = k
 
     def is_feasible(self):
         feasible = True
+        index = 0
         for key, value in self.selected_dict.items():
-            feasible = feasible and len(value) >= self.p
+            feasible = feasible and len(value) >= self.p[index]
             if not feasible:
                 break
+            index += 1
 
         return feasible
 
@@ -167,7 +169,7 @@ class Solution:
         to_remove = set()
         dict_last = instance.distance[last_added.v]
         for c in cl:
-            if c.cost < self.max_of * self.coef_bound or c.v in self.selected_list or self.n_selected[c.group] == self.p:
+            if c.cost < self.max_of * self.coef_bound or c.v in self.selected_list or self.n_selected[c.group] == self.p[c.group]:
                 to_remove.add(c)
             elif c.group == last_added.group:
                 d_to_last = dict_last[c.v]

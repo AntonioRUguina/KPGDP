@@ -79,7 +79,7 @@ class Solution_Gurobi:
         model.C1 = pyo.ConstraintList()
         for ki in range(k):
             x_sum = sum([X[i, ki] for i in range(l)])
-            model.C1.add(expr= x_sum == p)
+            model.C1.add(expr= x_sum == p[ki])
 
         model.C2 = pyo.ConstraintList()
 

@@ -7,7 +7,7 @@ class Instance:
     def __init__(self, path):
         self.name = ""  # nombre de la instancia
         self.n = 0  # nodos
-        self.p = 0
+        self.p = []
         self.k = 0
         self.capacity = []  # vector de capacidades
         self.distance = None  # matriz de distancia
@@ -26,8 +26,8 @@ class Instance:
                     self.distance = np.zeros((self.n, self.n))
                 elif i == 2:
                     self.k = int(line)
-                elif i == 3:
-                    self.p = int(line)
+                elif 3 <= i < 3 + self.k:
+                    self.p.append(int(line))
                 else:
                     line_read = line.rstrip('\t\n ')
                     d = [float(x) for x in line_read.split('\t')]

@@ -4,6 +4,12 @@ from pyomo.environ import *
 from pyomo.opt import SolverFactory
 import time
 from gurobipy import *
+
+def equal_percentage(lista1, lista2):
+    iguales = set(lista1) & set(lista2)  # intersección
+    total = len(lista1)  # o len(lista2), son iguales
+    return len(iguales) / total * 100
+
 class Solution_Gurobi:
     def __init__(self, param_dict, max_time):
         self.instance = param_dict["inst"]
@@ -96,14 +102,13 @@ class Solution_Gurobi:
                     minDist = min(minDist, distance[ii,jj])
         return minDist
 
-
     def run_algorithm_chained(self):
         # Sayah
         selected_list = []
         max_time = int(self.max_time/self.groups)
         for k in range(self.groups):
             print(self.instance_name + " " + str(k))
-            indices_to_remove = self.construct_solution_kgpdp_compact_chained(p=self.p,
+            indices_to_remove = self.construct_solution_kgpdp_compact_chained(p=self.p[k],
                                                                          time_max=max_time)
 
             # Remove rows
@@ -114,6 +119,54 @@ class Solution_Gurobi:
 
 
         return self.of
+
+    def run_chained_comparison(self):
+
+        X_value, of_compact = self.construct_solution_kgpdp_compact(k=self.groups, p=self.p, time_max=self.max_time)
+        index_kgpdp_compact = [x[0] for x in X_value]
+
+        # Mapeo inicial: cada índice apunta al original
+        index_map = list(range(len(self.distance)))
+
+        selected_list = []
+        max_time = int(self.max_time / self.groups)
+
+        index_solution_chained=[]
+        for k in range(self.groups):
+            print(self.instance_name + " " + str(k))
+
+            indices_to_remove, of_chained = self.construct_solution_kgpdp_compact_chained(
+                p=self.p[k],
+                time_max=max_time
+            )
+
+            # Traducimos los índices actuales a índices originales
+            original_indices = [index_map[i] for i in indices_to_remove]
+            print("Índices actuales:", indices_to_remove)
+            print("Índices originales:", original_indices)
+
+            # Guardamos los eliminados
+            selected_list.extend(original_indices)
+
+            # Eliminamos del mapeo los índices borrados
+            index_map = [v for i, v in enumerate(index_map) if i not in indices_to_remove]
+
+            # Remove rows
+            self.distance = [row for i, row in enumerate(self.distance) if i not in indices_to_remove]
+
+            # Remove columns
+            self.distance = [[elem for j, elem in enumerate(row) if j not in indices_to_remove] for row in
+                             self.distance]
+            index_solution_chained = index_solution_chained + original_indices
+
+        perc = equal_percentage(index_kgpdp_compact, index_solution_chained)
+        print("Equal_percentage: ", perc)
+        gap = (of_compact - of_chained)/of_compact
+        print(gap)
+        return self.of
+
+
+
     def extract_time_from_string(self,text):
         try:
             # Split the text by lines
@@ -214,7 +267,7 @@ class Solution_Gurobi:
         model.C1 = pyo.ConstraintList()
         for ki in range(k):
             x_sum = sum([X[i, ki] for i in range(n)])
-            model.C1.add(expr= x_sum == p)
+            model.C1.add(expr= x_sum == p[ki])
 
         model.C2 = pyo.ConstraintList()
 
@@ -252,8 +305,11 @@ class Solution_Gurobi:
             if pyo.value(u[m]) > 0:
                 solution.append(sorted_distances[m])
                 time_value = self.extract_time_from_string(str(results["Solver"]))
+                # print(sorted_distances[m])
                 self.save_dict_to_txt('output/outputModels.txt', sorted_distances[m], self.instance_name, "sayah", time_value)
                 break
+
+        # return X_value, sorted_distances[m]
 
 
     def construct_solution_kgpdp_compact_chained(self, p, time_max):
@@ -344,7 +400,7 @@ class Solution_Gurobi:
         model.C1 = pyo.ConstraintList()
         for ki in range(k):
             x_sum = sum([X[i, ki] for i in range(n)])
-            model.C1.add(expr= x_sum == p)
+            model.C1.add(expr= x_sum == p[ki])
 
         model.C2 = pyo.ConstraintList()
 
