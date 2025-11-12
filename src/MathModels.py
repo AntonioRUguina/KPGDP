@@ -54,40 +54,41 @@ class Solution_Gurobi:
             improved = False
             current_time = time.time() - start
             if (self.max_time - current_time > 1):
-                of = self.construct_solution_kgpdp_packing(k=self.groups, p=self.p, time_max=self.max_time - current_time, bound=next_bound, mode="Sbs")
+                of = self.construct_solution_kgpdp_packing(k=self.groups, p=self.p, time_max=self.max_time - current_time, bound=bound, mode="SbS")
                 if of > bound:
                     improved = True
                     bound = of
         self.save_dict_to_txt('output/outputPackingSbS.txt', bound, self.instance_name, "PackingSbS", time.time() - start)
 
         #F3 Binary
-        sorted_distances = list(dict.fromkeys([i.distance for i in self.sorted_distances]))
-        down_index = len(sorted_distances)
-        up_index = 0
-        start = time.time()
-        loop = True
-        best_of = 0
-        while loop:
-            improved = False
-            current_time = time.time() - start
-            if (self.max_time - current_time > 1):
-                target_index = int(up_index + (down_index - up_index)/2)
-                if target_index == up_index:
-                    loop = False
-                    break
-                bound = sorted_distances[target_index]
-                of = self.construct_solution_kgpdp_packing(k=self.groups, p=self.p, time_max=self.max_time - current_time, bound=bound, mode="Binary")
-                if of > 0:
-                    bound = of
-                    best_of = of
-                    down_index = target_index
-                else:
-                    up_index = target_index
-            else:
-                break
-
-
-        self.save_dict_to_txt('output/outputPackingBinary.txt', best_of, self.instance_name, "PakingBinary", time.time() - start)
+        # sorted_distances = list(dict.fromkeys([i.distance for i in self.sorted_distances]))
+        # down_index = len(sorted_distances)
+        # up_index = 0
+        # start = time.time()
+        # loop = True
+        # best_of = 0
+        # while loop:
+        #     improved = False
+        #     current_time = time.time() - start
+        #     if (self.max_time - current_time > 1):
+        #         target_index = int(up_index + (down_index - up_index)/2)
+        #         if target_index == up_index:
+        #             loop = False
+        #             break
+        #         bound = sorted_distances[target_index]
+        #         of = self.construct_solution_kgpdp_packing(k=self.groups, p=self.p, time_max=self.max_time - current_time, bound=bound, mode="Binary")
+        #         if of > 0:
+        #             bound = of
+        #             best_of = of
+        #             down_index = target_index
+        #         else:
+        #             up_index = target_index
+        #     else:
+        #         break
+        #
+        #
+        # self.save_dict_to_txt('output/outputPackingBinary.txt', best_of, self.instance_name, "PakingBinary", time.time() - start)
+        # self.construct_solution_kgpdp_edge(k=self.groups, p=self.p, time_max=self.max_time)
 
         return self.of
 
@@ -122,10 +123,10 @@ class Solution_Gurobi:
 
     def run_chained_comparison(self):
 
-        X_value, of_compact = self.construct_solution_kgpdp_compact(k=self.groups, p=self.p, time_max=self.max_time)
-        index_kgpdp_compact = [x[0] for x in X_value]
-
-        # Mapeo inicial: cada índice apunta al original
+        # X_value, of_compact = self.construct_solution_kgpdp_compact(k=self.groups, p=self.p, time_max=self.max_time)
+        # index_kgpdp_compact = [x[0] for x in X_value]
+        # 
+        # # Mapeo inicial: cada índice apunta al original
         index_map = list(range(len(self.distance)))
 
         selected_list = []
@@ -210,7 +211,7 @@ class Solution_Gurobi:
         model.C1 = pyo.ConstraintList()
         for ki in range(k):
             x_sum = sum([X[i, ki] for i in range(n)])
-            model.C1.add(expr= x_sum == p)
+            model.C1.add(expr= x_sum == p[ki])
 
         model.C2 = pyo.ConstraintList()
 
@@ -243,6 +244,90 @@ class Solution_Gurobi:
                 if pyo.value(X[i, k]) > 0:
                     solution_dict[k].append(i)
 
+    def construct_solution_kgpdp_edge(self, k, p, time_max):
+
+        instance = self.instance
+        n = instance.n
+
+        model = pyo.ConcreteModel()
+
+        model.i = RangeSet(0, n)
+        model.k = RangeSet(0, k)
+
+        # Set of ordered pairs (i, j) such that i < j
+        model.Ipairs = Set(initialize=[(i, j) for i in range(0, n + 1) for j in range(0, n + 1) if i < j])
+
+        model.X = pyo.Var(model.i, model.k, within=Binary)
+        model.Y = pyo.Var(model.Ipairs, model.k, within=Binary)
+
+        model.d = pyo.Var(bounds=(0, None))
+
+        d = model.d
+        X = model.X
+        Y = model.Y
+
+        M = np.max(self.distance)
+
+        model.C1 = pyo.ConstraintList()
+        for ki in range(k):
+            x_sum = sum([X[i, ki] for i in range(n)])
+            model.C1.add(expr=x_sum == p[ki])
+
+        model.C2 = pyo.ConstraintList()
+
+        for i in range(n):
+            x_sum = sum([X[i, ki] for ki in range(k)])
+            model.C2.add(expr=x_sum <= 1)
+
+        model.C3 = pyo.ConstraintList()
+        for i in range (n-1):
+            for j in range(i + 1, n):
+                for ki in range(k):
+                    model.C3.add(expr= Y[i,j,ki] - X[i,ki] <= 0)
+
+        model.C4 = pyo.ConstraintList()
+        for i in range(n - 1):
+            for j in range(i + 1, n):
+                for ki in range(k):
+                    model.C3.add(expr=Y[i, j, ki] - X[j, ki] <= 0)
+
+        model.C5 = pyo.ConstraintList()
+        for i in range(n - 1):
+            for j in range(i + 1, n):
+                for ki in range(k):
+                    model.C5.add(expr=Y[i,j,ki] - X[i,ki] - X[j,ki] >= -1)
+
+        model.C6 = pyo.ConstraintList()
+        for i in range(n-1):
+            for j in range(i + 1, n):
+                for ki in range(k):
+                    model.C6.add(expr=d + (M-self.distance[i,j])* Y[i,j,ki] <= M)
+        model.obj = pyo.Objective(expr=d, sense=maximize)
+
+
+        print("Model Built")
+        opt = SolverFactory('gurobi')
+        opt.options['TimeLimit'] = time_max
+
+        results = opt.solve(model)
+        print("solved")
+        d_value = pyo.value(d)
+
+        time_value = self.extract_time_from_string(str(results["Solver"]))
+        self.save_dict_to_txt('output/outputModels.txt', d_value, self.instance_name, "edge", time_value)
+
+        solution_dict = {k: [] for k in range(0, k)}
+        for k in range(0, k):
+            for i in range(0, n):
+                if pyo.value(X[i, k]) > 0:
+                    solution_dict[k].append(i)
+
+        for k in range(0, k):
+            for i in range(0, n-1):
+                for j in range(i+1, n):
+                    if pyo.value(Y[i,j, k]) > 0:
+                        if self.distance[i,j] == pyo.value(d):
+                            print(i,j, self.distance[i,j])
 
     def construct_solution_kgpdp_compact(self, k, p, time_max):
         instance = self.instance

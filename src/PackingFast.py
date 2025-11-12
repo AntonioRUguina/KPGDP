@@ -106,20 +106,29 @@ class Solution_Gurobi:
 
             if results.solver.termination_condition != 'infeasible':
                 min_distance = 10000000
+                solution_set = []
                 for ki in range(k):
+                    selected_ki = set()
+                    group_distance = 10000000
                     for i in range(l - 1):
                         if pyo.value(X[i, ki]) > 0.5:
                             for j in range(i + 1, l):
                                 if pyo.value(X[j, ki]) > 0.5:
                                     associated_i = uniqueList[i]
                                     associated_j = uniqueList[j]
+                                    selected_ki.add(associated_i)
+                                    selected_ki.add(associated_j)
                                     distance = self.distance[associated_i, associated_j]
                                     if distance < min_distance:
                                         min_distance = distance
-                print("PR SOLUTION: ", min_distance)
-                solution = min_distance
+                                    if distance < group_distance:
+                                        group_distance = distance
+                    print(ki, group_distance)
+                    solution_set.append(selected_ki)
+                # print("PR SOLUTION: ", min_distance)
+                solution_of = min_distance
                 #print('X:', X_value)
-                return solution
+                return solution_of, solution_set
             else:
                 print("Infeasible")
                 return 0

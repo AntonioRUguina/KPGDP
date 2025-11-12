@@ -82,17 +82,9 @@ class Solution_Group:
         self.selected_dict[k].append(v)
         self.selected_list.append(v)
         self.n_selected[k] += 1
-        if self.n_selected[k] == self.p - 1:
+        if self.n_selected[k] == self.p[k] - 1:
             self.group_last_selection = k
 
-    def is_feasible(self):
-        feasible = True
-        for key, value in self.selected_dict.items():
-            feasible = feasible and len(value) >= self.p
-            if not feasible:
-                break
-
-        return feasible
 
     def find_first_with_group(self, cl, target_group):
         for index, obj in enumerate(cl):
@@ -169,7 +161,7 @@ class Solution_Group:
         to_remove = set()
         dict_last = instance.distance[last_added.v]
         for c in cl:
-            if c.cost < self.max_of * self.coef_bound or c.v in self.selected_list or self.n_selected[c.group] == self.p:
+            if c.cost < self.max_of * self.coef_bound or c.v in self.selected_list or self.n_selected[c.group] == self.p[c.group]:
                 to_remove.add(c)
             else:
                 d_to_last = dict_last[c.v]
@@ -208,8 +200,8 @@ class Solution_Group:
             critical_nodes = {}
             critical_found = False
             for group, list_nodes in self.selected_dict.items():
-                for i in range(self.p - 1):
-                    for j in range(i + 1, self.p):
+                for i in range(self.p[group] - 1):
+                    for j in range(i + 1, self.p[group]):
                         if self.instance.distance[list_nodes[i], list_nodes[j]] == self.of:
                             critical_nodes.setdefault(list_nodes[i], group)
                             critical_nodes.setdefault(list_nodes[j], group)

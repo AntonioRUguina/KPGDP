@@ -20,11 +20,13 @@ def prepare_instance(t):
 
 if __name__ == "__main__":
 
-    tests = read_test("run_60.txt")
+    tests = read_test("run_test.txt")
     use_ls = True
     use_ls3 = True
     use_MRM = True
     verbose = False
+    s_parameter = 10
+    max_mcm_time = 120
     algorithms = ["Bias"]
     # algorithms = ["Bias", "BiasByGroup"]
     for alg in algorithms:
@@ -79,7 +81,7 @@ if __name__ == "__main__":
 
 
                 for sol in sorted_solutions:
-                    if len(top_solutions) >= 10:
+                    if len(top_solutions) >= s_parameter:
                         break
 
                     include = True
@@ -96,26 +98,29 @@ if __name__ == "__main__":
 
                 params_dict = prepare_instance(t)
 
-                max_pr_time = 120
-                start_pr = time.time()
+                max_mcm = max_mcm_time
+                start_mcm = time.time()
                 improved = True
 
                 # s = 10
 
                 while improved:
-                    current_time = time.time() - start_pr
-                    if (max_pr_time - current_time > 1):
-                        sol = Solution_Gurobi(params_dict, round(max_pr_time-current_time),
+                    current_time = time.time() - start_mcm
+                    if (max_mcm - current_time > 1):
+                        sol = Solution_Gurobi(params_dict, round(max_mcm-current_time),
                                               [i["selected_list"] for i in top_solutions], of)
-                        of_pr = sol.run_algorithm()
-                        if of_pr > of:
+                        of_mcm, set_mcm = sol.run_algorithm()
+                        if of_mcm > of:
                             improved = True
-                            print(of_pr)
-                            of = of_pr
+                            of = of_mcm
+                            set_solution = set_mcm
+                            if verbose:
+                                print(of_mcm)
+                                print(set_solution)
                         else:
                             improved = False
                     else:
                         break
 
 
-                final_sol.save_dict_to_txt('output/PR10.txt', of, t.instName, "PR10Pairs", min(max_pr_time, round(time.time() - start_pr)), t.seed)
+                final_sol.save_dict_to_txt('output/PR10.txt', of, t.instName, "PR10Pairs", min(max_mcm, round(time.time() - start_mcm)), t.seed)

@@ -12,15 +12,15 @@ from MathModels import Solution_Gurobi
 
 if __name__ == "__main__":
     # Read the file with the instances to execute
-    tests = read_test("run_60.txt")
+    tests = read_test("run_test.txt")
 
 
     for t in tests:
         params_dict = prepare_instance(t)
         sol = Solution_Gurobi(params_dict, t.max_time)
-        # sol.run_algorithm()
+        sol.run_algorithm()
         sol.run_algorithm_chained()
-
+        # sol.run_chained_comparison()
 
 
 
